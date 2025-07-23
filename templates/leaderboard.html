@@ -1,0 +1,53 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container" style="max-width:900px; margin:2rem auto;">
+  <div class="leaderboard-container">
+    <div class="leaderboard-header" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+      <h1 style="margin-bottom: 0.4em;">🏆 Leaderboard</h1>
+      <div class="leaderboard-stats" style="font-size:1.1em; color:#637290;">
+        <span class="total-participants">{{ rows|length }} participants</span>
+        <button id="refresh-leaderboard" class="btn btn-secondary" onclick="window.location.reload()" style="margin-left:1em;">
+          🔄 Refresh
+        </button>
+      </div>
+    </div>
+    
+    <div class="leaderboard-table" style="margin-top: 0.8em;">
+      <div class="leaderboard-header-row">
+        <div class="rank-column">Rank</div>
+        <div class="participant-column">Participant</div>
+        <div class="score-column">Score</div>
+        <div class="challenges-column">Solved</div>
+      </div>
+      
+      {% for entry in rows[:20] %}
+      <div class="leaderboard-row {% if loop.index <= 3 %}top-three{% endif %}">
+        <div class="rank-column" style="font-size:1.2em;">
+          {% if loop.index == 1 %}🥇
+          {% elif loop.index == 2 %}🥈
+          {% elif loop.index == 3 %}🥉
+          {% else %}{{ loop.index }}
+          {% endif %}
+        </div>
+        <div class="participant-column" style="display:flex; align-items:center;">
+          <div class="participant-avatar">{{ entry.email[0]|upper }}</div>
+          <span class="participant-email">{{ entry.email }}</span>
+        </div>
+        <div class="score-column">
+          <span class="score-value">{{ entry.total_score }}</span>
+          <span class="score-label" style="font-size:0.92em;">pts</span>
+        </div>
+        <div class="challenges-column">
+          {{ entry.challenges_solved }}{% if total_challenges is defined %} / {{ total_challenges }}{% endif %}
+        </div>
+      </div>
+      {% endfor %}
+      {% if rows|length == 0 %}
+      <div class="leaderboard-row" style="text-align:center;">
+        <em>No leaderboard data yet. Be the first to submit a solution!</em>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

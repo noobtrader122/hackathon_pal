@@ -1,0 +1,74 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="container" style="max-width:600px; margin:2rem auto;">
+  <h2 style="margin-bottom:1.5rem; text-align:center;">Create New SQL Challenge</h2>
+
+  {# SHOW FLASH MESSAGES #}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-messages">
+        {% for category, message in messages %}
+          <div class="flash-message flash-{{ category }}" role="alert">
+            <span>{{ message }}</span>
+            <button class="flash-close" onclick="this.parentElement.remove()" aria-label="Close">&times;</button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <form method="post" class="form-group" style="background:#fafbfc; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.03); padding:2rem;">
+    <div class="form-group">
+      <label for="title">Title</label>
+      <input id="title" name="title" required placeholder="e.g. Find Sales Employees">
+    </div>
+
+    <div class="form-group">
+      <label for="description">Description</label>
+      <textarea id="description" name="description" required rows="4" placeholder="Describe the challenge for participants..."></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="difficulty">Difficulty</label>
+      <select id="difficulty" name="difficulty" required>
+        <option value="easy">easy</option>
+        <option value="medium">medium</option>
+        <option value="hard">hard</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="category">Category <span class="help">(optional)</span></label>
+      <input id="category" name="category" placeholder="e.g. filtering, joins, aggregation">
+    </div>
+
+    <div class="form-group">
+      <label for="points">Points</label>
+      <input id="points" type="number" name="points" min="1" value="10" required>
+    </div>
+
+    <hr style="margin: 2rem 0;">
+
+    <h3 style="margin-bottom:1rem; font-size:1.3em;">Test Case</h3>
+
+    <div class="form-group">
+      <label for="tc_schema">Test Schema (DDL)</label>
+      <textarea id="tc_schema" name="tc_schema" required rows="2" placeholder="CREATE TABLE employees (id INT, name TEXT, dept TEXT);"></textarea>
+    </div>
+    <div class="form-group">
+      <label for="tc_data">Test Data (DML)</label>
+      <textarea id="tc_data" name="tc_data" required rows="2" placeholder="INSERT INTO employees VALUES (1, 'Alice', 'Sales'), (2, 'Bob', 'Engineering');"></textarea>
+    </div>
+    <div class="form-group">
+      <label for="tc_expected_result">Expected Result (JSON, e.g. [["Alice"]])</label>
+      <textarea id="tc_expected_result" name="tc_expected_result" required rows="2" placeholder='[["Alice"], ["Charlie"]]'></textarea>
+    </div>
+
+    <div style="text-align: center;">
+      <button type="submit" class="btn btn-primary" style="width:60%;">Add Challenge</button>
+    </div>
+  </form>
+</div>
+
+{% endblock %}

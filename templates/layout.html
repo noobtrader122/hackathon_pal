@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>SQL Hackathon{% block title %}{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="icon" href="https://cdn.jsdelivr.net/gh/twitter/twemoji/assets/svg/1f4bb.svg" type="image/svg+xml">
+</head>
+<body>
+  <nav style="display:flex; align-items:center; justify-content:space-between; background:#f7faff; border-bottom:1.5px solid #e5e9f2; padding: 0.8em 1.2em;">
+    <div>
+      <a href="{{ url_for('challenge_bp.list_challenges') }}" class="nav-link">Challenges</a>
+      <a href="{{ url_for('leaderboard_bp.show_leaderboard') }}" class="nav-link" style="margin-left:1.2em;">Leaderboard</a>
+      {% if session.get('is_admin') %}
+        <a href="{{ url_for('admin_bp.new_challenge') }}" class="nav-link" style="margin-left:1.2em;">Admin</a>
+        <a href="{{ url_for('admin_bp.admin_logout') }}" class="nav-link" style="margin-left:0.7em;">Logout</a>
+      {% else %}
+        <a href="{{ url_for('admin_bp.admin_login') }}" class="nav-link" style="margin-left:1.2em;">Admin Login</a>
+      {% endif %}
+    </div>
+    <button class="dark-mode-toggle" id="dark-mode-toggle" aria-label="Toggle dark mode">🌙</button>
+  </nav>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-messages" style="max-width:600px; margin:1.5em auto 0 auto;">
+        {% for category, message in messages %}
+          <div class="flash-message flash-{{ category }}" role="alert">
+            <span>{{ message }}</span>
+            <button class="flash-close" onclick="this.parentElement.remove()" aria-label="Close">&times;</button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+
+  <footer style="text-align:center; margin:2.5em 0 1em 0; font-size:0.95em; color:#555;">
+    <hr style="margin:1.5em 0;">
+    <span>&copy; {{ 2024 }} SQL Hackathon Platform &middot; <a href="https://github.com/rayyan-mirza/hackathon_pal" target="_blank">GitHub</a></span>
+  </footer>
+
+  <script>
+    // Dark mode toggle logic
+    document.addEventListener('DOMContentLoaded', function() {
+      const btn = document.getElementById('dark-mode-toggle');
+      const dark = localStorage.getItem('darkMode') === 'enabled';
+      if (dark) document.body.classList.add('dark-mode');
+      btn.innerHTML = dark ? '☀️' : '🌙';
+      btn.onclick = function() {
+        document.body.classList.toggle('dark-mode');
+        const enabled = document.body.classList.contains('dark-mode');
+        localStorage.setItem('darkMode', enabled ? 'enabled' : 'disabled');
+        btn.innerHTML = enabled ? '☀️' : '🌙';
+      };
+    });
+  </script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

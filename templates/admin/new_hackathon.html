@@ -1,0 +1,57 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container" style="max-width:560px; margin:2rem auto;">
+  <h2 style="text-align:center; margin-bottom:1.4em;">Create New Hackathon</h2>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-messages">
+        {% for category, message in messages %}
+          <div class="flash-message flash-{{ category }}">
+            <span>{{ message }}</span>
+            <button class="flash-close" onclick="this.parentElement.remove()" aria-label="Close">&times;</button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <form method="post" class="form-group" style="background:#fafbfc; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,.04); padding:2rem;">
+    <div class="form-group">
+      <label for="name">Hackathon Name</label>
+      <input id="name" name="name" required placeholder="e.g. July SQL Blitz">
+    </div>
+    <div class="form-group">
+      <label for="description">Description</label>
+      <textarea id="description" name="description" rows="2" placeholder="What is this hackathon about?"></textarea>
+    </div>
+    <div class="form-group">
+      <label for="start_time">Start Time</label>
+      <input id="start_time" name="start_time" type="datetime-local" required>
+    </div>
+    <div class="form-group">
+      <label for="end_time">End Time</label>
+      <input id="end_time" name="end_time" type="datetime-local" required>
+    </div>
+    <div class="form-group">
+      <label>Assign Challenges</label>
+      <div style="max-height: 160px; overflow-y: auto; border:1px solid #eee; border-radius:6px; padding:7px;">
+        {% for ch in challenges %}
+          <div style="margin-bottom:6px;">
+            <label>
+              <input type="checkbox" name="challenge_ids" value="{{ ch.id }}">
+              {{ ch.title }}
+            </label>
+          </div>
+        {% endfor %}
+        {% if not challenges %}
+          <div>No challenges exist yet.</div>
+        {% endif %}
+      </div>
+    </div>
+    <div style="text-align:center; margin-top:1.5em;">
+      <button type="submit" class="btn btn-primary" style="width:60%;">Create Hackathon</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,332 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="hr-page-frame">
+
+  <!-- CHALLENGE NAVIGATION SIDEBAR -->
+  <nav class="challenge-nav-sidebar">
+    <h3 style="text-align:center; margin-bottom:1.1em;">Challenges</h3>
+    <ul class="challenge-nav-list">
+      {% for c in all_challenges %}
+        <li class="{% if c.id == challenge.id %}current{% endif %}">
+          <a href="{{ url_for('challenge_bp.challenge_page', cid=c.id) }}">
+            {{ c.title }}
+          </a>
+          {% if c.solved %}<span style="color:#28a745;">✔️</span>{% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  </nav>
+
+  <!-- LEFT COLUMN: Challenge Content -->
+  <div class="hr-task-panel">
+    <div class="hr-task-content">
+      <h1 class="challenge-title">{{ challenge.title }}</h1>
+      <div class="challenge-meta" style="margin-bottom:1em;">
+        <span class="difficulty difficulty-{{ challenge.difficulty }}">{{ challenge.difficulty|capitalize }}</span>
+        <span class="points">{{ challenge.points }} points</span>
+        {% if challenge.category %}<span class="category">{{ challenge.category }}</span>{% endif %}
+      </div>
+      <div class="description unselectable">{{ challenge.description|safe }}</div>
+      <div class="test-cases-preview unselectable">
+        <h3>Sample Test Case</h3>
+        {% set ex_case = challenge.test_cases[0] %}
+        <div class="example-case">
+          <strong>Schema:</strong>
+          <pre><code>{{ ex_case.test_schema }}</code></pre>
+          <strong>Data:</strong>
+          <pre><code>{{ ex_case.test_data }}</code></pre>
+          <strong>Expected Output:</strong>
+          <pre>{{ ex_case.expected_result | pprint }}</pre>
+        </div>
+      </div>
+      <div class="challenge-nav-btns">
+        {% if prev_challenge %}
+          <a href="{{ url_for('challenge_bp.challenge_page', cid=prev_challenge.id) }}"
+             class="btn btn-secondary" style="margin-right:0.8em">&laquo; Previous</a>
+        {% endif %}
+        {% if next_challenge %}
+          <a href="{{ url_for('challenge_bp.challenge_page', cid=next_challenge.id) }}"
+             class="btn btn-secondary">Next &raquo;</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT COLUMN: SQL Editor and Submission Form -->
+  <div class="hr-code-panel">
+    <form id="submission-form"
+      method="POST"
+      action="{{ url_for('submission_bp.handle_submission', cid=challenge.id) }}"
+      autocomplete="off"
+      class="submission-panel">
+
+      <!-- Challenge Timer -->
+      <div id="challenge-timer-panel" style="margin-bottom:1em;text-align:right;">
+        <span id="challenge-timer" style="font-size:1.1em; color:#198754; font-weight:500;">
+          ⏰ <span id="timer-mins"></span>:<span id="timer-secs"></span>
+        </span>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Your Email <span class="help">(required)</span></label>
+        <input id="email" name="email" type="email" required placeholder="your@email.com">
+        <div class="validation-message" id="email-validation"></div>
+      </div>
+      <div class="editor-section">
+        <div class="editor-header">
+          <label for="sql-editor"><strong>Your SQL Solution</strong></label>
+          <div class="editor-tools" style="float:right;">
+            <button type="button" id="format-sql" class="btn" style="margin-left:8px;">Format SQL</button>
+            <button type="button" id="clear-editor" class="btn">Clear</button>
+          </div>
+          <div style="clear:both"></div>
+        </div>
+        <div class="sql-editor-container">
+          <textarea id="sql-editor"
+            name="sql"
+            required
+            style="width:100%; height:48vh; min-height:180px; max-height:60vh; resize:vertical;"
+            placeholder="-- Write your SQL query here...
+SELECT * FROM employees WHERE ...;"></textarea>
+        </div>
+        <div class="validation-message" id="sql-validation"></div>
+      </div>
+      <div style="text-align:center; margin-top:18px;">
+        <button type="submit" id="submit-btn" class="btn btn-primary" style="width:80%;">Submit Solution</button>
+      </div>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-messages" style="margin-top:1em;">
+            {% for category, message in messages %}
+              <div class="flash-message flash-{{ category }}">
+                <span>{{ message }}</span>
+                <button class="flash-close" onclick="this.parentElement.remove()" aria-label="Close">&times;</button>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+    </form>
+  </div>
+
+</div>
+<style>
+/* --- Layout --- */
+.hr-page-frame {
+  display: flex;
+  height: calc(100vh - 4.8em);
+  min-height: 530px;
+  background: #f1f4f8;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.challenge-nav-sidebar {
+  min-width: 210px;
+  max-width: 250px;
+  border-right: 2px solid #dde0f2;
+  background: #f2f8fc;
+  box-shadow: 2px 0 8px #e6eef7;
+  padding: 1.5em 0.7em 1.5em 0.7em;
+  height: 100%;
+  overflow-y: auto;
+}
+.challenge-nav-list {
+  list-style-type: none; margin: 0; padding: 0;
+}
+.challenge-nav-list li {
+  padding: 0.45em 0.7em;
+  border-radius: 7px;
+  margin-bottom: 4px;
+  font-size: 1em;
+  transition: background 0.08s;
+}
+.challenge-nav-list li a {
+  text-decoration: none; color: #185be7;
+}
+.challenge-nav-list li.current,
+.challenge-nav-list li:hover {
+  background: #deebfd;
+  font-weight: 600;
+}
+.challenge-nav-list li span {
+  margin-left: 7px;
+}
+
+/* Main panels */
+.hr-task-panel, .hr-code-panel {
+  width: 50%; min-width: 330px;
+  display: flex; flex-direction: column;
+  height: 100%; box-sizing: border-box; background: #fff;
+}
+.hr-task-panel {
+  border-right: 2.5px solid #dde0f2;
+  box-shadow: 1px 0 7px 0 #e8e9fa54;
+}
+.hr-task-content {
+  overflow-y: auto; height: 100%;
+  padding: 2em 1.1em 1.3em 2.1em;
+}
+.hr-code-panel {
+  box-shadow: -1px 0 7px 0 #e8e9fa54;
+  position: relative;
+  padding: 2em 2em 1.3em 1.3em;
+  overflow-y: auto;
+}
+
+.test-cases-preview {
+  background: #f9fafb;
+  border-radius: 6px;
+  padding: 1rem;
+  margin: 1.3em 0 0.7em 0;
+}
+.challenge-nav-btns { margin: 2.3em 0 1.1em 0; }
+
+@media (max-width: 1200px) {
+  .hr-page-frame { flex-direction: column; height: unset; }
+  .challenge-nav-sidebar {
+    width: 100%; max-width:unset; min-width:unset;
+    border-right: none; border-bottom: 2px solid #dde0f2; box-shadow: none;
+    padding: 1em;
+  }
+  .hr-task-panel, .hr-code-panel { width: 100%; min-width: 0; box-shadow: none;}
+}
+@media (max-width: 700px) {
+  .hr-task-content, .hr-code-panel { padding: 1.1em 0.5em; }
+  .sql-editor-container textarea { height: 180px; min-height: 100px; max-height: 40vh;}
+}
+
+/* Editor textarea styles */
+.hr-code-panel .sql-editor-container textarea,
+.sql-editor-container textarea {
+  box-sizing: border-box; width: 100%;
+  font-size: 1em; font-family: 'Fira Mono', 'Consolas', monospace;
+  padding: 12px;
+  border: 2px solid #dde0f2; border-radius: 6px;
+  min-height: 180px;
+  max-height: 60vh;
+  height: 48vh;
+  resize: vertical;
+}
+@media (max-width: 900px) {
+  .sql-editor-container textarea { width: 98% !important; }
+}
+/* Misc */
+.unselectable {
+  -webkit-user-select: none; -moz-user-select: none;
+  -ms-user-select: none; user-select: none;
+}
+#challenge-timer-panel {
+  font-family: "Segoe UI", "Arial", sans-serif; letter-spacing: 1px;
+}
+#challenge-timer {
+  padding: .12em .5em; border-radius: 5px;
+  background: #e6fbe6; color: #198754;
+}
+#challenge-timer-panel.over {
+  color: #dc3545 !important;
+  background: #f8d7da;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('submission-form');
+  const emailInput = document.getElementById('email');
+  const sqlInput = document.getElementById('sql-editor');
+  const emailValidation = document.getElementById('email-validation');
+  const sqlValidation = document.getElementById('sql-validation');
+  const submitBtn = document.getElementById('submit-btn');
+  // Email validation
+  emailInput.addEventListener('blur', validateEmail);
+  emailInput.addEventListener('input', clearEmailError);
+  function validateEmail() {
+    const email = emailInput.value.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) {
+      emailValidation.innerHTML = 'Email is required';
+      emailValidation.className = 'validation-message error';
+      return false;
+    } else if (!emailRegex.test(email)) {
+      emailValidation.innerHTML = 'Enter a valid email address';
+      emailValidation.className = 'validation-message error';
+      return false;
+    } else {
+      emailValidation.innerHTML = '';
+      emailValidation.className = 'validation-message';
+      return true;
+    }
+  }
+  function clearEmailError() { emailValidation.innerHTML = ""; }
+  // SQL basic validation
+  sqlInput.addEventListener('input', function() {
+    const sql = this.value.trim();
+    if (!sql) {
+      sqlValidation.innerHTML = 'SQL query is required';
+      sqlValidation.className = 'validation-message error';
+    } else if (!sql.toUpperCase().startsWith('SELECT')) {
+      sqlValidation.innerHTML = 'Only SELECT statements are allowed';
+      sqlValidation.className = 'validation-message error';
+    } else {
+      sqlValidation.innerHTML = '';
+      sqlValidation.className = 'validation-message';
+    }
+  });
+  // Editor Tools
+  document.getElementById('format-sql').addEventListener('click', function() {
+    let sql = sqlInput.value;
+    sql = sql.replace(/\bSELECT\b/gi, 'SELECT\n  ');
+    sql = sql.replace(/\bFROM\b/gi, '\nFROM');
+    sql = sql.replace(/\bWHERE\b/gi, '\nWHERE');
+    sql = sql.replace(/\bORDER BY\b/gi, '\nORDER BY');
+    sqlInput.value = sql;
+  });
+  document.getElementById('clear-editor').addEventListener('click', function() {
+    sqlInput.value = '';
+    sqlValidation.innerHTML = '';
+  });
+  // Form submission loading feedback
+  form.addEventListener('submit', function(e) {
+    if (!validateEmail() || sqlValidation.className.includes('error')) {
+      e.preventDefault();
+      return false;
+    }
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Submitting...";
+  });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  {% if time_limit_sec %}
+    let timer = {{ time_limit_sec }};
+    let minsSpan = document.getElementById('timer-mins');
+    let secsSpan = document.getElementById('timer-secs');
+    let form = document.getElementById('submission-form');
+    let timerPanel = document.getElementById('challenge-timer-panel');
+    function pad(n) { return n < 10 ? '0' + n : n; }
+    function updateTimer() {
+      let mins = Math.floor(timer / 60);
+      let secs = timer % 60;
+      minsSpan.textContent = pad(mins);
+      secsSpan.textContent = pad(secs);
+      if (timer === 0) {
+        clearInterval(intvl);
+        if(form){
+          form.querySelectorAll("input, textarea, button").forEach(e => e.disabled = true);
+          let notice = document.createElement('div');
+          notice.innerHTML = "⏳ Time's up — you can no longer submit!";
+          notice.setAttribute("style", "margin-top:1em;color:#dc3545;font-weight:600;");
+          form.appendChild(notice);
+        }
+        timerPanel.setAttribute("style", "color:#dc3545;font-weight:600;");
+      }
+      timer -= 1;
+    }
+    updateTimer();
+    let intvl = setInterval(updateTimer, 1000);
+  {% endif %}
+});
+</script>
+{% endblock %}

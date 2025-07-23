@@ -1,0 +1,107 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="hackathon-main-frame">
+  {# --- SIDEBAR: Challenge navigation --- #}
+  <div class="challenges-sidebar" style="min-width:220px;">
+    <h3 style="text-align:center; margin-bottom: 1em;">
+      {{ hackathon.name if hackathon else "Challenges" }}
+    </h3>
+    {% if hackathon and hackathon.description %}
+      <div style="font-size:13px; color:#556080; margin-bottom: 1.3em; line-height:1.4;">
+        {{ hackathon.description }}
+      </div>
+    {% endif %}
+    <ul class="sidebar-list">
+      {% for c in challenges %}
+        <li class="sidebar-item {% if current_cid and c.id == current_cid %}active{% endif %}">
+          <a href="{{ url_for('challenge_bp.challenge_page', cid=c.id) }}">
+            {{ c.title }}
+          </a>
+          {% if c.solved %}<span class="badge badge-success">✔️</span>{% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="challenges-content">
+    <h1 style="margin-bottom: 1.4rem; text-align: center;">{{ hackathon.name if hackathon else 'SQL Hackathon Challenges' }}</h1>
+    <div class="challenge-list" style="display:grid; grid-template-columns:1fr; gap: 1.3em;">
+      {% for c in challenges %}
+        <div class="challenge-row" style="background:#f7fafd; border-radius:8px; padding:18px; box-shadow:0 2px 6px rgba(0,0,0,0.03); display:flex; flex-direction:column;">
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <a href="{{ url_for('challenge_bp.challenge_page', cid=c.id) }}" class="challenge-link" style="font-size:1.2em; font-weight:600; text-decoration:none; color: #007bff;">
+              {{ c.title }}
+            </a>
+            <a href="{{ url_for('challenge_bp.challenge_page', cid=c.id) }}" class="btn btn-primary" style="font-size:0.96em; padding:7px 15px;">Solve</a>
+          </div>
+          <div class="challenge-meta" style="font-size:.96em; color:#6c7184; margin-top:4px; margin-bottom:4px;">
+            <span class="difficulty difficulty-{{ c.difficulty }}">{{ c.difficulty|capitalize }}</span>
+            • <b>{{ c.points }}</b> pts
+            {% if c.category %} • <span class="cat">{{ c.category }}</span>{% endif %}
+          </div>
+          {% if c.description %}
+            <div style="margin-top:5px; font-size:14px; color:#414760;">
+              {{ c.description[:150] }}{% if c.description|length > 150 %}...{% endif %}
+            </div>
+          {% endif %}
+        </div>
+      {% else %}
+        <div class="challenge-row">
+          <em>No challenges for this hackathon yet.</em>
+        </div>
+      {% endfor %}
+    </div>
+
+    {% if pagination %}
+      <div class="pagination" style="display:flex; gap:1em; justify-content:center; align-items:center; margin:1.8em 0;">
+        {% if pagination.has_prev %}
+          <a class="btn btn-secondary" href="{{ url_for('challenge_bp.list_challenges', page=pagination.prev_num, hackathon_id=hackathon.id) }}">&laquo; Prev</a>
+        {% endif %}
+        <span>Page {{ pagination.page }} of {{ pagination.pages }}</span>
+        {% if pagination.has_next %}
+          <a class="btn btn-secondary" href="{{ url_for('challenge_bp.list_challenges', page=pagination.next_num, hackathon_id=hackathon.id) }}">Next &raquo;</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+.hackathon-main-frame {
+  display: flex; align-items: flex-start; gap: 48px;
+}
+.challenges-sidebar {
+  background: #f3f8ff;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px #e3e6f7;
+  padding: 1.7em 1em;
+  min-width: 210px;
+  max-width: 240px;
+}
+.sidebar-list {
+  list-style: none; margin: 0; padding: 0;
+}
+.sidebar-item {
+  margin: 0.45em 0;
+  font-size: 1em;
+  padding: 0.4em 0.6em;
+  border-radius: 6px;
+  transition: background 0.12s;
+}
+.sidebar-item.active, .sidebar-item:hover {
+  background: #e6ebfa; font-weight: 600;
+}
+.sidebar-item a {
+  text-decoration: none; color: #185be7;
+}
+.sidebar-item .badge-success {
+  margin-left: 8px; color: #24b659; font-size: 1.1em;
+}
+.challenges-content { flex: 1 1 0%; }
+
+@media (max-width:900px) {
+  .hackathon-main-frame { flex-direction: column; gap:0; }
+  .challenges-sidebar { max-width:unset; width:100%; margin-bottom:1.5em; }
+}
+</style>
+{% endblock %}

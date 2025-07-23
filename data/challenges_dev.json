@@ -1,0 +1,70 @@
+{
+ "challenges":[
+  {
+    "id": 1,
+    "title": "Find Employees from Sales Department",
+    "description": "Write an SQL query to return the names of all employees in the 'Sales' department, ordered alphabetically.",
+    "difficulty": "easy",
+    "category": "filtering",
+    "points": 10,
+    "test_cases": [
+      {
+        "test_id": 1,
+        "test_schema": "CREATE TABLE employees (id INTEGER PRIMARY KEY, name TEXT, dept TEXT);",
+        "test_data": "INSERT INTO employees VALUES (1, 'Alice', 'Sales'), (2, 'Bob', 'Engineering'), (3, 'Charlie', 'Sales');",
+        "expected_result": [
+          ["Alice"],
+          ["Charlie"]
+        ],
+        "description": "Basic test with 2 Sales employees."
+      },
+      {
+        "test_id": 2,
+        "test_schema": "CREATE TABLE employees (id INTEGER PRIMARY KEY, name TEXT, dept TEXT);",
+        "test_data": "INSERT INTO employees VALUES (1, 'David', 'HR'), (2, 'Eva', 'Sales');",
+        "expected_result": [
+          ["Eva"]
+        ],
+        "description": "Another sample with just one Sales employee."
+      },
+      {
+        "test_id": 3,
+        "test_schema": "CREATE TABLE employees (id INTEGER PRIMARY KEY, name TEXT, dept TEXT);",
+        "test_data": "INSERT INTO employees VALUES (1, 'John', 'Engineering'), (2, 'Mia', 'HR');",
+        "expected_result": [
+        ],
+        "description": "No Sales employees present."
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "title": "Count Employees in Each Department",
+    "description": "Write an SQL query to return the department name and the number of employees in each department.",
+    "difficulty": "easy",
+    "category": "grouping",
+    "points": 10,
+    "test_cases": [
+      {
+        "test_id": 1,
+        "test_schema": "CREATE TABLE employees (id INTEGER PRIMARY KEY, name TEXT, dept TEXT);",
+        "test_data": "INSERT INTO employees VALUES (1, 'Alice', 'Sales'), (2, 'Bob', 'Engineering'), (3, 'Charlie', 'Sales');",
+        "expected_result": [
+          ["Engineering", 1],
+          ["Sales", 2]
+        ],
+        "description": "Sample with two departments."
+      },
+      {
+        "test_id": 2,
+        "test_schema": "CREATE TABLE employees (id INTEGER PRIMARY KEY, name TEXT, dept TEXT);",
+        "test_data": "INSERT INTO employees VALUES (1, 'David', 'HR');",
+        "expected_result": [
+          ["HR", 1]
+        ],
+        "description": "Only HR."
+      }
+    ]
+  }
+]
+}
