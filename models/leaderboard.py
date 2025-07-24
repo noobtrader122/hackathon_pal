@@ -7,7 +7,7 @@
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 from datetime import datetime
-from .base import BaseModel
+from base import BaseModel
 
 @dataclass
 class ParticipantStats(BaseModel):

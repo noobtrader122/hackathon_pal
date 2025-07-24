@@ -5,10 +5,10 @@
 """
 
 from flask import Blueprint, request, redirect, url_for, flash
-from ..models.sqlalchemy_models import (
+from models.sqlalchemy_models import (
     Challenge, Submission, TestCaseResult, LeaderboardEntry
 )
-from ..models.database_utils import eval_sql_with_defog
+from models.database_utils import eval_sql_with_defog
 from hackathon_pal import db
 from datetime import datetime
 import uuid

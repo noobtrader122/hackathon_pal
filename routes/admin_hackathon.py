@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from datetime import datetime
-from ..models.sqlalchemy_models import db, Hackathon, Challenge
+from models.sqlalchemy_models import db, Hackathon, Challenge
 
 admin_hackathon_bp = Blueprint('admin_hackathon', __name__, url_prefix='/admin/hackathon')
 

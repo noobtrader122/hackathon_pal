@@ -7,9 +7,9 @@ This package contains all route definitions organized by functionality:
 - leaderboard_routes: Leaderboard display and statistics
 """
 
-from .challenge_routes import challenge_bp
-from .submission_routes import submission_bp  
-from .leaderboard_routes import leaderboard_bp
+from challenge_routes import challenge_bp
+from submission_routes import submission_bp  
+from leaderboard_routes import leaderboard_bp
 
 __all__ = [
     'challenge_bp',

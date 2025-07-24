@@ -5,8 +5,8 @@
 """
 
 from flask import Blueprint, render_template, abort, current_app, request,session
-from ..models import Challenge
-from ..models.database_utils import ChallengeLoader
+from models import Challenge
+from models.database_utils import ChallengeLoader
 
 challenge_bp = Blueprint("challenge_bp", __name__)
 

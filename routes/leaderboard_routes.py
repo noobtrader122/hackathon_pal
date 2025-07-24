@@ -6,7 +6,7 @@
 """
 
 from flask import Blueprint, render_template, current_app
-from ..models import Submission, LeaderboardEntry
+from models import Submission, LeaderboardEntry
 
 leaderboard_bp = Blueprint("leaderboard_bp", __name__)
 

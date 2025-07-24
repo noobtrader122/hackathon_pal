@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template
-from ..models.sqlalchemy_models import Hackathon, Challenge
+from models.sqlalchemy_models import Hackathon, Challenge
 
 hackathon_bp = Blueprint("hackathon_bp", __name__)
 

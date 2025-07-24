@@ -8,7 +8,7 @@
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Any
 from datetime import datetime
-from .base import BaseModel
+from base import BaseModel
 
 @dataclass
 class TestCase(BaseModel):
