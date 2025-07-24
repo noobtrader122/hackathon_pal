@@ -1,1 +1,1 @@
-web: gunicorn hackathon_pal:app
+web: gunicorn app
