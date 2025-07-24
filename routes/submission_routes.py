@@ -9,7 +9,7 @@ from models.sqlalchemy_models import (
     Challenge, Submission, TestCaseResult, LeaderboardEntry
 )
 from models.database_utils import eval_sql_with_defog
-from hackathon_pal import db
+from factory import db
 from datetime import datetime
 import uuid
 import time
