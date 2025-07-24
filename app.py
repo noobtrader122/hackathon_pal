@@ -4,7 +4,7 @@
 ---------------------------------------------------------------------------------
 """
 # app.py - Main entry point
-from . import create_app
+from factory import create_app
 import os
 
 # Create application
