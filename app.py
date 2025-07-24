@@ -4,7 +4,7 @@
 ---------------------------------------------------------------------------------
 """
 # app.py - Main entry point
-from hackathon_pal import create_app
+from . import create_app
 import os
 
 # Create application
