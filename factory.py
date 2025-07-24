@@ -7,20 +7,6 @@ from flask import Flask , render_template
 from models.sqlalchemy_models import db
 from flask_migrate import Migrate
 
-# --- Auto-load env vars before config, for Flask and tools ---
-try:
-    from dotenv import load_dotenv
-    dotenv_path = None
-    if os.path.exists(os.path.join(os.path.dirname(__file__), '.env')):
-        dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
-    elif os.path.exists(os.path.join(os.path.dirname(__file__), '.development.env')):
-        dotenv_path = os.path.join(os.path.dirname(__file__), '.development.env')
-    if dotenv_path:
-        load_dotenv(dotenv_path)
-        print(f"[INFO] Loaded environment from: {dotenv_path}")
-except ImportError:
-    pass  # python-dotenv not installed, ignore
-
 # Initialize extensions
 migrate = Migrate()
 
@@ -34,6 +20,7 @@ def create_app(config_name=None):
     # Load configuration object
     from config import get_config 
     config_class = get_config(config_name)
+    print(f'config_class: {config_class}')
     app.config.from_object(config_class)
     print(f'config_class: {config_class.SQLALCHEMY_DATABASE_URI}')
     # Initialize extensions
