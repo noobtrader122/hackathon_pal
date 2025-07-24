@@ -10,11 +10,16 @@ This package contains all route definitions organized by functionality:
 from challenge_routes import challenge_bp
 from submission_routes import submission_bp  
 from leaderboard_routes import leaderboard_bp
+from admin_routes import admin_bp
+from admin_hackathon import admin_hackathon_bp
+
 
 __all__ = [
     'challenge_bp',
     'submission_bp', 
-    'leaderboard_bp'
+    'leaderboard_bp',
+    'admin_bp',
+    'admin_hackathon_bp'
 ]
 
 # Route configuration

@@ -42,12 +42,7 @@ def create_app(config_name=None):
     config_class.init_app(app)
 
     # Register blueprints
-    from routes.challenge_routes import challenge_bp
-    from routes.submission_routes import submission_bp
-    from routes.leaderboard_routes import leaderboard_bp
-
-    from routes.admin_routes import admin_bp
-    from routes.admin_hackathon import admin_hackathon_bp
+    from routes import challenge_bp, submission_bp, leaderboard_bp, admin_bp, admin_hackathon_bp
     
     
     app.register_blueprint(challenge_bp, url_prefix='/challenges')
