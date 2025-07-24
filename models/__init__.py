@@ -8,7 +8,7 @@ This package contains:
 """
 
 # --- SQLAlchemy ORM models (recommended for all routes) ---
-from sqlalchemy_models import (
+from .sqlalchemy_models import (
     db,  # SQLAlchemy instance
     Challenge,
     TestCase,
