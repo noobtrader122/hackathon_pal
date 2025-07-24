@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from enum import Enum
-from base import BaseModel
+from .base import BaseModel
 
 class SubmissionStatus(Enum):
     PENDING = "pending"

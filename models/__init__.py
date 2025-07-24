@@ -18,14 +18,14 @@ from .sqlalchemy_models import (
 )
 
 # --- OPTIONALLY: Legacy dataclasses (keep ONLY for challenge import/JSON admin utils) ---
-from base import BaseModel
-from challenge import Challenge as ChallengeDataClass, TestCase as TestCaseDataClass
-from submission import Submission as SubmissionDataClass, TestCaseResult as TestCaseResultDataClass, SubmissionStatus
-from leaderboard import Leaderboard, ParticipantStats
+from .base import BaseModel
+from .challenge import Challenge as ChallengeDataClass, TestCase as TestCaseDataClass
+from .submission import Submission as SubmissionDataClass, TestCaseResult as TestCaseResultDataClass, SubmissionStatus
+from .leaderboard import Leaderboard, ParticipantStats
 
 # --- Database utilities ---
 try:
-    from database_utils import DatabaseManager, ChallengeLoader, eval_sql_with_defog
+    from .database_utils import DatabaseManager, ChallengeLoader, eval_sql_with_defog
 except ImportError:
     DatabaseManager = None
     ChallengeLoader = None

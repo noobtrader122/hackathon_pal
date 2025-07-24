@@ -11,7 +11,7 @@ from typing import List, Dict, Any, Optional, Tuple
 from pathlib import Path
 from challenge import Challenge, TestCase
 from contextlib import contextmanager
-from models.submission import TestCaseResult, SubmissionStatus
+from ..models.submission import TestCaseResult, SubmissionStatus
 
 class DatabaseManager:
     """Manages database operations and data loading"""
