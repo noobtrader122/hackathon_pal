@@ -4,7 +4,7 @@ SQL Hackathon Platform - Main Application Package
 
 import os
 from flask import Flask , render_template
-from hackathon_pal.models.sqlalchemy_models import db
+from models.sqlalchemy_models import db
 from flask_migrate import Migrate
 
 # --- Auto-load env vars before config, for Flask and tools ---
