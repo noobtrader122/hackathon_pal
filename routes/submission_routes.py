@@ -4,7 +4,7 @@
 ------------------------------------------------------
 """
 
-from flask import Blueprint, request, redirect, url_for, flash, session
+from flask import Blueprint, request, redirect, url_for, flash, session as flask_session
 from sqlalchemy.exc import DataError, StatementError
 from models.sqlalchemy_models import (
     Challenge, Submission, TestCaseResult, LeaderboardEntry, User
@@ -14,6 +14,7 @@ from factory import db
 from datetime import datetime
 import uuid
 import time
+import json
 
 submission_bp = Blueprint("submission_bp", __name__)
 
@@ -24,7 +25,7 @@ def normalize_status(status_str: str) -> str:
 
     Adjust the valid enums below to match exactly with your Postgres enum type.
     """
-    valid_enum_values = {"passed", "failed", "error", "timeout", "skipped"}
+    valid_enum_values = {"passed", "failed", "error", "timeout", "skipped", "correct"}
 
     if not status_str:
         return "error"
@@ -39,7 +40,7 @@ def normalize_status(status_str: str) -> str:
 
 @submission_bp.route("/<int:cid>", methods=["POST"])
 def handle_submission(cid):
-    user_id = session.get("user_id")
+    user_id = flask_session.get("user_id")
     if not user_id:
         flash("You must be logged in to submit.", "error")
         return redirect(url_for("auth_bp.login"))
@@ -127,19 +128,31 @@ def handle_submission(cid):
 
         db.session.commit()
 
+        # Store last submission output in session to show on challenge page
+        last_output = []
+        for result in test_results:
+            r = result.to_dict() if hasattr(result, "to_dict") else dict(result)
+            last_output.append({
+                "test_id": r.get("test_id"),
+                "status": normalize_status(r.get("status").name if hasattr(r.get("status"), "name") else str(r.get("status"))),
+                "error_message": r.get("error_message"),
+                "actual_result": r.get("actual_result"),
+            })
+        flask_session["last_submission_output"] = json.dumps(last_output)
+
     except (DataError, StatementError) as db_exc:
         db.session.rollback()
         flash(
-            f"Submission error: Invalid data or SQL error detected. Please check your SQL query and try again.",
+            "Submission error: Invalid data or SQL error detected. Please check your SQL query and try again.",
             "error"
         )
-        # Optional: Log db_exc for admins
+        # Optional: add logging here for db_exc
         return redirect(url_for("challenge_bp.challenge_page", hackathon_id=hackathon_id, cid=cid))
 
     except Exception as exc:
         db.session.rollback()
         flash("An unexpected error occurred while processing your submission. Please try again.", "error")
-        # Optional: Log exc for admins
+        # Optional: add logging here for exc
         return redirect(url_for("challenge_bp.challenge_page", hackathon_id=hackathon_id, cid=cid))
 
     flash(feedback, "success" if passed else "error")

@@ -5,6 +5,7 @@
 """
 
 from flask import Blueprint, render_template, abort, request, session
+import json
 from models.sqlalchemy_models import Challenge, Hackathon
 from datetime import datetime, timezone
 from typing import Optional
@@ -62,6 +63,9 @@ def challenge_page(hackathon_id: int, cid: int):
     challenge = Challenge.query.get_or_404(cid)
     hackathon = Hackathon.query.get_or_404(hackathon_id)
 
+    last_output_json = session.pop("last_submission_output", None)
+    last_submission_output = json.loads(last_output_json) if last_output_json else None
+
     if challenge not in hackathon.challenges:
         abort(404, description="Challenge not part of this hackathon.")
 
@@ -91,5 +95,7 @@ def challenge_page(hackathon_id: int, cid: int):
         hackathon_start_iso=hackathon_start_iso,
         hackathon_end_iso=hackathon_end_iso,
         now_iso=now_utc.isoformat(),
-        hackathon_id=hackathon_id
+        hackathon_id=hackathon_id,
+        last_submission_output=last_submission_output
     )
+

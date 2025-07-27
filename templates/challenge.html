@@ -115,6 +115,29 @@ SELECT * FROM employees WHERE ...;"></textarea>
           </div>
         {% endif %}
       {% endwith %}
+
+      {% if last_submission_output %}
+        <div class="submission-output" aria-live="polite" role="region" tabindex="0" style="margin: 1em 0; padding: 1em; background: #f8f9fa; border: 1px solid #ccc; border-radius: 6px;">
+          <h4>Your Last Submission Results:</h4>
+          <ul>
+            {% for result in last_submission_output %}
+            <li>
+              <strong>Test Case ID:</strong> {{ result.test_id }} — 
+              <strong>Status:</strong> 
+              <span style="color: {% if result.status == 'passed' %}green{% else %}red{% endif %};">
+                {{ result.status|capitalize }}
+              </span>
+              {% if result.error_message %}
+              <div><em>Error: {{ result.error_message }}</em></div>
+              {% endif %}
+              {% if result.actual_result %}
+              <pre style="background:#eee; padding:0.4em; overflow-x:auto;">{{ result.actual_result|tojson(indent=2) }}</pre>
+              {% endif %}
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
     </form>
   </div>
 </div>
@@ -224,6 +247,13 @@ SELECT * FROM employees WHERE ...;"></textarea>
   padding: .12em .5em; border-radius: 5px;
   background: #e6fbe6; color: #198754;
 }
+.submission-output {
+  max-height: 30vh;
+  overflow-y: auto;
+  font-family: monospace;
+  font-size: 0.9em;
+}
+
 </style>
 {% endblock %}
 
