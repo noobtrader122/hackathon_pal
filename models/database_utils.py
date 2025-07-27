@@ -12,6 +12,7 @@ from pathlib import Path
 from .challenge import Challenge, TestCase
 from contextlib import contextmanager
 from .submission import TestCaseResult, SubmissionStatus
+import platform
 
 class DatabaseManager:
     """Manages database operations and data loading"""
