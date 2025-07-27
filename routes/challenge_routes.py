@@ -44,61 +44,43 @@ def list_challenges(hackathon_id: Optional[int]):
 
     # Show first challenge as detail or None if no challenges
     first_challenge = challenges[0] if challenges else None
+    is_first_challenge = first_challenge is not None
 
     return render_template(
         "challenge.html",
         all_challenges=challenges,
         challenge=first_challenge,
         pagination=pagination,
+        hackathon_id=hackathon_id,
+        first_challenge=first_challenge,
+        is_first_challenge=is_first_challenge,
     )
 
 
-@challenge_bp.route("/challenge/<int:cid>")
-def challenge_page(cid: int):
-    """
-    Displays the challenge detail page for challenge id `cid`,
-    including navigation, solved marking, and the global hackathon timer.
-    """
-    # Fetch requested challenge or 404
+@challenge_bp.route("/hackathon/<int:hackathon_id>/challenge/<int:cid>")
+def challenge_page(hackathon_id: int, cid: int):
     challenge = Challenge.query.get_or_404(cid)
+    hackathon = Hackathon.query.get_or_404(hackathon_id)
 
-    # Get hackathons for the challenge (many-to-many)
-    if challenge.hackathons.count() == 0:
-        abort(404, description="Hackathon not found for this challenge.")
-    # Assume first hackathon for timer purposes
-    hackathon = challenge.hackathons.first()
+    if challenge not in hackathon.challenges:
+        abort(404, description="Challenge not part of this hackathon.")
 
-    # Fetch all challenges for the hackathon (sidebar/navigation)
     challenges = hackathon.challenges.order_by(Challenge.id.asc()).all()
 
-    # Mark solved challenges based on session info
     solved_ids = set(session.get("solved_ids", []))
     for c in challenges:
         c.solved = c.id in solved_ids
 
-    # Navigation: previous and next challenges within hackathon
     challenge_ids = [c.id for c in challenges]
-    try:
-        idx = challenge_ids.index(cid)
-    except ValueError:
-        abort(404, description="Challenge not found in hackathon challenges.")
+    idx = challenge_ids.index(cid)
 
     prev_challenge = challenges[idx - 1] if idx > 0 else None
     next_challenge = challenges[idx + 1] if idx < len(challenges) - 1 else None
 
-    # Timer: use per-challenge time limit or default 10 min (600 seconds)
-    time_limit_sec = getattr(challenge, "time_limit_sec", 600)
-
     now_utc = datetime.now(timezone.utc)
 
-    hackathon_start_iso = (
-        hackathon.start_time.isoformat() if hackathon.start_time else None
-    )
+    hackathon_start_iso = hackathon.start_time.isoformat() if hackathon.start_time else None
     hackathon_end_iso = hackathon.end_time.isoformat() if hackathon.end_time else None
-
-    # If you have app logger:
-    # from flask import current_app
-    # current_app.logger.debug(f"Hackathon times: start={hackathon_start_iso}, end={hackathon_end_iso}")
 
     return render_template(
         "challenge.html",
@@ -106,8 +88,8 @@ def challenge_page(cid: int):
         all_challenges=challenges,
         prev_challenge=prev_challenge,
         next_challenge=next_challenge,
-        time_limit_sec=time_limit_sec,
         hackathon_start_iso=hackathon_start_iso,
         hackathon_end_iso=hackathon_end_iso,
         now_iso=now_utc.isoformat(),
+        hackathon_id=hackathon_id
     )

@@ -5,14 +5,20 @@
   <!-- CHALLENGE NAVIGATION SIDEBAR -->
   <nav class="challenge-nav-sidebar">
     <h3 style="text-align:center; margin-bottom:1.1em;">Challenges</h3>
+      {% if is_first_challenge and first_challenge %}
+        <script>
+          window.location.href = "{{ url_for('challenge_bp.challenge_page', hackathon_id=hackathon_id, cid=first_challenge.id) }}";
+        </script>
+      {% endif %}
     <ul class="challenge-nav-list">
+      <!-- Sidebar challenges list -->
       {% for c in all_challenges %}
-        <li class="{% if c.id == challenge.id %}current{% endif %}">
-          <a href="{{ url_for('challenge_bp.challenge_page', cid=c.id) }}">
-            {{ c.title }}
-          </a>
-          {% if c.solved %}<span style="color:#28a745;">✔️</span>{% endif %}
-        </li>
+      <li class="{% if c.id == challenge.id %}current{% endif %}">
+        <a href="{{ url_for('challenge_bp.challenge_page', hackathon_id=hackathon_id, cid=c.id) }}">
+          {{ c.title }}
+        </a>
+        {% if c.solved %}<span style="color:#28a745;">✔️</span>{% endif %}
+      </li>
       {% endfor %}
     </ul>
   </nav>
@@ -41,15 +47,15 @@
         </div>
       </div>
       <div class="challenge-nav-btns">
+        <!-- Previous button -->
         {% if prev_challenge %}
-          <a href="{{ url_for('challenge_bp.challenge_page', cid=prev_challenge.id) }}"
-             class="btn btn-secondary" style="margin-right:0.8em">&laquo; Previous</a>
+          <a href="{{ url_for('challenge_bp.challenge_page', hackathon_id=hackathon_id, cid=prev_challenge.id) }}" class="btn btn-secondary" style="margin-right:0.8em">&laquo; Previous</a>
         {% endif %}
+        <!-- Next button -->
         {% if next_challenge %}
-          <a href="{{ url_for('challenge_bp.challenge_page', cid=next_challenge.id) }}"
-             class="btn btn-secondary">Next &raquo;</a>
+          <a href="{{ url_for('challenge_bp.challenge_page', hackathon_id=hackathon_id, cid=next_challenge.id) }}" class="btn btn-secondary">Next &raquo;</a>
         {% endif %}
-      </div>
+              </div>
       {% else %}
 
       {% endif %}
@@ -67,7 +73,7 @@
       {% endif %}
       autocomplete="off"
       class="submission-panel">
-
+      <input type="hidden" name="hackathon_id" value="{{ hackathon_id }}">
       <!-- Hackathon Timer (global) -->
       <div id="hackathon-timer-panel" style="margin-bottom:1em; text-align: right;">
         <span id="hackathon-timer" style="font-size:1.1em; color:#198754; font-weight: 500;">

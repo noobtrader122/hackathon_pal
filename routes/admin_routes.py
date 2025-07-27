@@ -30,6 +30,7 @@ def admin_login():
             if user.is_admin:
                 session.clear()
                 # Optional: session.permanent = True (for longer admin logins)
+                session["user_id"] = user.id
                 session["is_admin"] = True
                 session["username"] = user.username
                 flash("Logged in as admin.", "success")
