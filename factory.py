@@ -4,7 +4,7 @@ SQL Hackathon Platform - Main Application Package
 
 import os
 from flask import Flask , render_template
-from models.sqlalchemy_models import db
+from models.sqlalchemy_models import db, Hackathon, Challenge
 from flask_migrate import Migrate
 
 # Initialize extensions
@@ -29,24 +29,30 @@ def create_app(config_name=None):
     config_class.init_app(app)
 
     # Register blueprints
-    from routes import challenge_bp, submission_bp, leaderboard_bp, admin_bp, admin_hackathon_bp
+    from routes import challenge_bp, submission_bp, leaderboard_bp, admin_bp, admin_hackathon_bp, user_bp
     
     
     app.register_blueprint(challenge_bp, url_prefix='/challenges')
     app.register_blueprint(submission_bp, url_prefix='/submit')
     app.register_blueprint(leaderboard_bp, url_prefix='/leaderboard')
     app.register_blueprint(admin_bp, url_prefix='/admin')
-    app.register_blueprint(admin_hackathon_bp, url_prefix='/admin/hackathon')
+    app.register_blueprint(admin_hackathon_bp, url_prefix='/hackathon')
+    app.register_blueprint(user_bp, url_prefix='/user')
+
 
     # Register main routes
     @app.route('/')
     def index():
-        return render_template('index.html')
+        hackathons = Hackathon.query.order_by(Hackathon.id).all()
+        challenges = Challenge.query.order_by(Challenge.id).all()
+        return render_template('index.html', hackathons=hackathons, challenges=challenges)
 
 
     @app.route('/health')
     def health_check():
         return {'status': 'healthy', 'version': app.config['VERSION']}
+    
+
 
     # Create database tables (for early dev/testing)
     with app.app_context():

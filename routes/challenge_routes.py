@@ -4,58 +4,101 @@
 ----------------------------------------------------------------------------
 """
 
-from flask import Blueprint, render_template, abort, current_app, request,session
-from models import Challenge
-from models.database_utils import ChallengeLoader
+from flask import Blueprint, render_template, abort, request, session
+from models.sqlalchemy_models import Challenge, Hackathon
+from datetime import datetime, timezone
+from typing import Optional
 
 challenge_bp = Blueprint("challenge_bp", __name__)
 
-@challenge_bp.route("/")
-def list_challenges():
+
+@challenge_bp.route("/", defaults={"hackathon_id": None})
+@challenge_bp.route("/hackathon/<int:hackathon_id>")
+def list_challenges(hackathon_id: Optional[int]):
     """
-    List all challenges (from DB or JSON, depending on config)
+    List challenges paginated.
+    Optionally filter by hackathon_id using many-to-many relation.
+    Shows first challenge as default detail.
+
+    URL examples:
+    - /                      -> all challenges (paginated)
+    - /hackathon/123         -> challenges for hackathon 123 (paginated)
     """
-    source = current_app.config.get("CHALLENGES_DATA_SOURCE", "database")
-    if source == "json":
-        # JSON loader path (legacy/dev)
-        challenges = ChallengeLoader.load_from_json(
-            current_app.config["CHALLENGES_JSON_FILE"]
+    page = request.args.get("page", 1, type=int)
+    per_page = 20
+
+    if hackathon_id is not None:
+        hackathon = Hackathon.query.get(hackathon_id)
+        if not hackathon:
+            abort(404, description="Hackathon not found.")
+
+        pagination = hackathon.challenges.order_by(Challenge.id.asc()).paginate(
+            page=page, per_page=per_page, error_out=False
         )
-    else:
-        # SQLAlchemy ORM path (production-ready)
-        # Optionally, paginate or order here
-        page = request.args.get('page', 1, type=int)
-        per_page = 20
-        pagination = Challenge.query.order_by(Challenge.id.asc()).paginate(page=page, per_page=per_page, error_out=False)
         challenges = pagination.items
+    else:
+        pagination = Challenge.query.order_by(Challenge.id.asc()).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+        challenges = pagination.items
+
+    # Show first challenge as detail or None if no challenges
+    first_challenge = challenges[0] if challenges else None
+
     return render_template(
-        "index.html",
-        challenges=challenges,
-        pagination=pagination if source != "json" else None
+        "challenge.html",
+        all_challenges=challenges,
+        challenge=first_challenge,
+        pagination=pagination,
     )
 
-@challenge_bp.route("/<int:cid>")
-def challenge_page(cid):
-    # Get all challenges in consistent order
-    challenges = Challenge.query.order_by(Challenge.id).all()
+
+@challenge_bp.route("/challenge/<int:cid>")
+def challenge_page(cid: int):
+    """
+    Displays the challenge detail page for challenge id `cid`,
+    including navigation, solved marking, and the global hackathon timer.
+    """
+    # Fetch requested challenge or 404
     challenge = Challenge.query.get_or_404(cid)
 
-    # (Optional) - Marking solved/attempted challenges if user data available:
-    # Suppose you have user progress in the session or DB.
-    # For this example, let's say session['solved_ids'] = [1,2,...]
+    # Get hackathons for the challenge (many-to-many)
+    if challenge.hackathons.count() == 0:
+        abort(404, description="Hackathon not found for this challenge.")
+    # Assume first hackathon for timer purposes
+    hackathon = challenge.hackathons.first()
+
+    # Fetch all challenges for the hackathon (sidebar/navigation)
+    challenges = hackathon.challenges.order_by(Challenge.id.asc()).all()
+
+    # Mark solved challenges based on session info
     solved_ids = set(session.get("solved_ids", []))
     for c in challenges:
         c.solved = c.id in solved_ids
 
-    # Find index for navigation
+    # Navigation: previous and next challenges within hackathon
     challenge_ids = [c.id for c in challenges]
-    idx = challenge_ids.index(cid)
+    try:
+        idx = challenge_ids.index(cid)
+    except ValueError:
+        abort(404, description="Challenge not found in hackathon challenges.")
+
     prev_challenge = challenges[idx - 1] if idx > 0 else None
     next_challenge = challenges[idx + 1] if idx < len(challenges) - 1 else None
 
-    # Timer: you can set per-challenge or a global default
-    # e.g. challenge.time_limit_sec or a config value
-    time_limit_sec = getattr(challenge, "time_limit_sec", 600)    # fallback to 10m default
+    # Timer: use per-challenge time limit or default 10 min (600 seconds)
+    time_limit_sec = getattr(challenge, "time_limit_sec", 600)
+
+    now_utc = datetime.now(timezone.utc)
+
+    hackathon_start_iso = (
+        hackathon.start_time.isoformat() if hackathon.start_time else None
+    )
+    hackathon_end_iso = hackathon.end_time.isoformat() if hackathon.end_time else None
+
+    # If you have app logger:
+    # from flask import current_app
+    # current_app.logger.debug(f"Hackathon times: start={hackathon_start_iso}, end={hackathon_end_iso}")
 
     return render_template(
         "challenge.html",
@@ -63,5 +106,8 @@ def challenge_page(cid):
         all_challenges=challenges,
         prev_challenge=prev_challenge,
         next_challenge=next_challenge,
-        time_limit_sec=time_limit_sec
+        time_limit_sec=time_limit_sec,
+        hackathon_start_iso=hackathon_start_iso,
+        hackathon_end_iso=hackathon_end_iso,
+        now_iso=now_utc.isoformat(),
     )

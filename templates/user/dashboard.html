@@ -1,0 +1,115 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="user-dashboard-container">
+  <h2>Welcome, {{ username or session.username or 'User' }}!</h2>
+  
+  <div class="dashboard-stats">
+    <div class="stat-card">
+      <span class="stat-label">Challenges Solved</span>
+      <span class="stat-value">{{ solved_count or 0 }}</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Your Points</span>
+      <span class="stat-value">{{ points or 0 }}</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Leaderboard Rank</span>
+      <span class="stat-value">{% if rank %}{{ rank }}{% else %}-{% endif %}</span>
+    </div>
+  </div>
+
+  <div class="user-actions">
+    <!--<a href="{{ url_for('admin_hackathon.list_hackathons') }}" class="dashboard-btn">Hackathons</a> -->
+    <!--<a href="{{ url_for('challenge_bp.list_challenges') }}" class="dashboard-btn">View Challenges</a> -->
+    <!--<a href="{{ url_for('leaderboard_bp.show_leaderboard') }}" class="dashboard-btn">Leaderboard</a> -->
+    <!-- Optionally add: -->
+    <!-- <a href="{{ url_for('user_bp.user_profile') }}" class="dashboard-btn">My Profile</a>
+    <a href="{{ url_for('user_bp.logout') }}" class="dashboard-btn dashboard-btn-logout">Logout</a> -->
+  </div>
+</div>
+<style>
+ .user-dashboard-container, .admin-dashboard-container {
+  max-width: 680px;
+  margin: 3.5rem auto 2rem auto;
+  background: #f8fbff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.05);
+  padding: 2.5rem 2.2rem 2rem 2.2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.user-dashboard-container h2 {
+  font-weight: 700;
+  color: #213a68;
+  letter-spacing: 1px;
+  margin-bottom: 2rem;
+}
+
+.dashboard-stats {
+  display: flex;
+  gap: 2.5em;
+  margin-bottom: 2.4em;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.stat-card {
+  min-width: 130px;
+  background: #e8f1ff;
+  border-radius: 10px;
+  padding: 1.5em 1.2em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 1.5px 10px rgba(0,0,0,0.04);
+}
+
+.stat-label {
+  font-size: 1em;
+  color: #2572b9;
+  margin-bottom: 0.5em;
+  font-weight: 500;
+  letter-spacing: .7px;
+}
+
+.stat-value {
+  font-size: 2.1em;
+  color: #20396b;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.user-actions, .admin-actions {
+  display: flex;
+  gap: 1.4em;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.dashboard-btn, .dashboard-btn-logout {
+  background: #00509e;
+  color: white !important;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75em 1.35em;
+  font-size: 1em;
+  font-weight: 600;
+  letter-spacing: .5px;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  transition: background .18s, box-shadow .18s;
+  cursor: pointer;
+  margin-top: 0.1em;
+  display: inline-block;
+  outline: none;
+}
+.dashboard-btn-logout { background: #e1483c; }
+.dashboard-btn-logout:hover { background: #ab1818; }
+.dashboard-btn:hover {
+  background: #003f7a;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.17);
+}
+</style>
+{% endblock %}

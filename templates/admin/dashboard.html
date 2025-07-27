@@ -1,0 +1,109 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="admin-dashboard-container">
+  <h2>Welcome, Admin!</h2>
+
+  <div class="dashboard-stats">
+    <div class="stat-card">
+      <span class="stat-label">Challenges</span>
+      <span class="stat-value">{{ challenge_count }}</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Users</span>
+      <span class="stat-value">{{ user_count }}</span>
+    </div>
+    <!-- Add more stat cards as needed -->
+  </div>
+
+  <div class="admin-actions">
+    <a href="{{ url_for('admin_bp.new_challenge') }}" class="dashboard-btn">Add New Challenge</a>
+    <a href="{{ url_for('challenge_bp.list_challenges') }}" class="dashboard-btn">View Challenges</a>
+    <a href="{{ url_for('admin_hackathon.create_hackathon') }}" class="dashboard-btn">Add New Hackathon</a>
+    <a href="{{ url_for('admin_bp.add_user') }}" class="dashboard-btn">Add User</a>
+    <!-- Add more actions as needed -->
+  </div>
+</div>
+<style>
+ .admin-dashboard-container {
+  max-width: 680px;
+  margin: 3.5rem auto 2rem auto;
+  background: #f8fbff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.05);
+  padding: 2.5rem 2.2rem 2rem 2.2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.admin-dashboard-container h2 {
+  font-weight: 700;
+  color: #213a68;
+  letter-spacing: 1px;
+  margin-bottom: 2rem;
+}
+
+.dashboard-stats {
+  display: flex;
+  gap: 2.5em;
+  margin-bottom: 2.4em;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.stat-card {
+  min-width: 130px;
+  background: #e8f1ff;
+  border-radius: 10px;
+  padding: 1.5em 1.2em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 1.5px 10px rgba(0,0,0,0.04);
+}
+
+.stat-label {
+  font-size: 1em;
+  color: #2572b9;
+  margin-bottom: 0.5em;
+  font-weight: 500;
+  letter-spacing: .7px;
+}
+
+.stat-value {
+  font-size: 2.1em;
+  color: #20396b;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.admin-actions {
+  display: flex;
+  gap: 1.4em;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.dashboard-btn {
+  background: #00509e;
+  color: white !important;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75em 1.35em;
+  font-size: 1em;
+  font-weight: 600;
+  letter-spacing: .5px;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  transition: background .18s, box-shadow .18s;
+  cursor: pointer;
+  margin-top: 0.1em;
+  display: inline-block;
+  outline: none;
+}
+.dashboard-btn:hover {
+  background: #003f7a;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.17);
+}
+</style>
+{% endblock %}

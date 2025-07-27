@@ -1,107 +1,161 @@
 {% extends "layout.html" %}
-{% block content %}
-<div class="hackathon-main-frame">
-  {# --- SIDEBAR: Challenge navigation --- #}
-  <div class="challenges-sidebar" style="min-width:220px;">
-    <h3 style="text-align:center; margin-bottom: 1em;">
-      {{ hackathon.name if hackathon else "Challenges" }}
-    </h3>
-    {% if hackathon and hackathon.description %}
-      <div style="font-size:13px; color:#556080; margin-bottom: 1.3em; line-height:1.4;">
-        {{ hackathon.description }}
-      </div>
-    {% endif %}
-    <ul class="sidebar-list">
-      {% for c in challenges %}
-        <li class="sidebar-item {% if current_cid and c.id == current_cid %}active{% endif %}">
-          <a href="{{ url_for('challenge_bp.challenge_page', cid=c.id) }}">
-            {{ c.title }}
-          </a>
-          {% if c.solved %}<span class="badge badge-success">✔️</span>{% endif %}
-        </li>
-      {% endfor %}
-    </ul>
-  </div>
 
-  <div class="challenges-content">
-    <h1 style="margin-bottom: 1.4rem; text-align: center;">{{ hackathon.name if hackathon else 'SQL Hackathon Challenges' }}</h1>
-    <div class="challenge-list" style="display:grid; grid-template-columns:1fr; gap: 1.3em;">
-      {% for c in challenges %}
-        <div class="challenge-row" style="background:#f7fafd; border-radius:8px; padding:18px; box-shadow:0 2px 6px rgba(0,0,0,0.03); display:flex; flex-direction:column;">
-          <div style="display:flex; align-items:center; justify-content:space-between;">
-            <a href="{{ url_for('challenge_bp.challenge_page', cid=c.id) }}" class="challenge-link" style="font-size:1.2em; font-weight:600; text-decoration:none; color: #007bff;">
-              {{ c.title }}
-            </a>
-            <a href="{{ url_for('challenge_bp.challenge_page', cid=c.id) }}" class="btn btn-primary" style="font-size:0.96em; padding:7px 15px;">Solve</a>
-          </div>
-          <div class="challenge-meta" style="font-size:.96em; color:#6c7184; margin-top:4px; margin-bottom:4px;">
-            <span class="difficulty difficulty-{{ c.difficulty }}">{{ c.difficulty|capitalize }}</span>
-            • <b>{{ c.points }}</b> pts
-            {% if c.category %} • <span class="cat">{{ c.category }}</span>{% endif %}
-          </div>
-          {% if c.description %}
-            <div style="margin-top:5px; font-size:14px; color:#414760;">
-              {{ c.description[:150] }}{% if c.description|length > 150 %}...{% endif %}
+{% block content %}
+<div class="hackathon-list-container" role="main" aria-label="Active Hackathons List">
+  <h2 class="page-title">Active Hackathons</h2>
+  {% if hackathons %}
+    <div class="hackathon-list">
+      {% for h in hackathons %}
+        <div class="hackathon-card" role="region" aria-labelledby="hackathon-title-{{ h.id }}">
+          <div class="hackathon-card-body">
+            <h3 id="hackathon-title-{{ h.id }}" class="hackathon-title">
+              {{ h.name }}
+              {# "New" badge if hackathon started less than 7 days ago #}
+              {% if now and h.start_time and (h.start_time > (now - timedelta(days=7))) %}
+                <span class="hackathon-badge" aria-label="New Hackathon">New</span>
+              {% endif %}
+            </h3>
+            {% if h.description %}
+              <p class="hackathon-desc">{{ h.description|truncate(200) }}</p>
+            {% endif %}
+            <div class="hackathon-meta">
+              <span>
+                Start: {{ h.start_time.strftime('%b %d, %Y') if h.start_time else 'TBA' }}
+              </span>
+              <span>
+                End: {{ h.end_time.strftime('%b %d, %Y') if h.end_time else 'TBA' }}
+              </span>
+              {% if session.get('is_admin') %}
+                <span>
+                  <a href="{{ url_for('admin_hackathon.edit_hackathon', id=h.id) }}"
+                     class="hackathon-edit-link" title="Edit Hackathon" aria-label="Edit {{ h.name }}">
+                    <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> Edit
+                  </a>
+                </span>
+              {% endif %}
             </div>
-          {% endif %}
-        </div>
-      {% else %}
-        <div class="challenge-row">
-          <em>No challenges for this hackathon yet.</em>
+            <a href="{{ url_for('admin_hackathon.show_hackathon_challenges', hackathon_id=h.id) }}" 
+               class="hackathon-view-btn" role="button" aria-label="View challenges for {{ h.name }}">
+              View Challenges
+            </a>
+          </div>
         </div>
       {% endfor %}
     </div>
-
-    {% if pagination %}
-      <div class="pagination" style="display:flex; gap:1em; justify-content:center; align-items:center; margin:1.8em 0;">
-        {% if pagination.has_prev %}
-          <a class="btn btn-secondary" href="{{ url_for('challenge_bp.list_challenges', page=pagination.prev_num, hackathon_id=hackathon.id) }}">&laquo; Prev</a>
-        {% endif %}
-        <span>Page {{ pagination.page }} of {{ pagination.pages }}</span>
-        {% if pagination.has_next %}
-          <a class="btn btn-secondary" href="{{ url_for('challenge_bp.list_challenges', page=pagination.next_num, hackathon_id=hackathon.id) }}">Next &raquo;</a>
-        {% endif %}
-      </div>
-    {% endif %}
-  </div>
+  {% else %}
+    <div class="empty-state" role="alert">
+      <em>No hackathons available yet.</em>
+    </div>
+  {% endif %}
 </div>
 
 <style>
-.hackathon-main-frame {
-  display: flex; align-items: flex-start; gap: 48px;
+.hackathon-list-container {
+  max-width: 900px;
+  margin: 3.5rem auto 2rem auto;
+  padding: 1.4em;
+  background: #f7faff;
+  border-radius: 18px;
+  box-shadow: 0 2.5px 20px rgba(0,0,0,0.06);
 }
-.challenges-sidebar {
-  background: #f3f8ff;
-  border-radius: 10px;
-  box-shadow: 0 2px 12px #e3e6f7;
-  padding: 1.7em 1em;
-  min-width: 210px;
-  max-width: 240px;
-}
-.sidebar-list {
-  list-style: none; margin: 0; padding: 0;
-}
-.sidebar-item {
-  margin: 0.45em 0;
-  font-size: 1em;
-  padding: 0.4em 0.6em;
-  border-radius: 6px;
-  transition: background 0.12s;
-}
-.sidebar-item.active, .sidebar-item:hover {
-  background: #e6ebfa; font-weight: 600;
-}
-.sidebar-item a {
-  text-decoration: none; color: #185be7;
-}
-.sidebar-item .badge-success {
-  margin-left: 8px; color: #24b659; font-size: 1.1em;
-}
-.challenges-content { flex: 1 1 0%; }
 
-@media (max-width:900px) {
-  .hackathon-main-frame { flex-direction: column; gap:0; }
-  .challenges-sidebar { max-width:unset; width:100%; margin-bottom:1.5em; }
+.page-title {
+  font-size: 2.1em;
+  font-weight: 700;
+  color: #225686;
+  margin-bottom: 2em;
+  text-align: center;
+}
+
+.hackathon-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2.2em;
+  justify-content: center;
+}
+
+.hackathon-card {
+  width: 330px;
+  background: #eaf2ff;
+  padding: 1.7em 1.2em 1.1em 1.2em;
+  border-radius: 13px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+  display: flex;
+  flex-direction: column;
+}
+
+.hackathon-title {
+  font-size: 1.22em;
+  font-weight: 600;
+  letter-spacing: .4px;
+  margin-bottom: 0.45em;
+  color: #184a82;
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
+}
+
+.hackathon-badge {
+  background: #54b583;
+  color: #fff;
+  font-size: 0.82em;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: 8px;
+  margin-left: 0.5em;
+  letter-spacing: .4px;
+}
+
+.hackathon-desc {
+  font-size: 1em;
+  color: #355075;
+  margin-bottom: 1.5em;
+}
+
+.hackathon-meta {
+  font-size: .97em;
+  color: #7486b2;
+  margin-bottom: 1em;
+  display: flex;
+  gap: 1.2em;
+  align-items: center;
+}
+
+.hackathon-edit-link {
+  color: #a56e12;
+  margin-left: 0.2em;
+  font-size: .98em;
+  text-decoration: none;
+  transition: color .16s;
+}
+.hackathon-edit-link:hover {
+  color: #ffbb53;
+  text-decoration: underline;
+}
+
+.hackathon-view-btn {
+  display: inline-block;
+  padding: 0.6em 1.3em;
+  background: #2567ba;
+  color: white !important;
+  border-radius: 8px;
+  font-size: 1em;
+  font-weight: 600;
+  text-decoration: none;
+  letter-spacing: .4px;
+  transition: background 0.16s;
+  text-align: center;
+}
+.hackathon-view-btn:hover,
+.hackathon-view-btn:focus {
+  background: #095bb6;
+  outline: none;
+}
+.empty-state {
+  text-align: center;
+  color: #475a7b;
+  margin: 3em 0;
+  font-size: 1.08em;
 }
 </style>
 {% endblock %}

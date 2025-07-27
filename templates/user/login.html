@@ -1,0 +1,103 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="login-container">
+  <h2>User Login</h2>
+  <form method="POST" class="login-form">
+    <div class="form-row">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" required>
+    </div>
+    <div class="form-row">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" required>
+    </div>
+    <button type="submit" class="login-btn">Login</button>
+    <p class="login-link">Don't have an account? <a href="{{ url_for('user_bp.register') }}">Register here</a></p>
+  </form>
+</div>
+<style>
+.login-container {
+  max-width: 400px;
+  margin: 4rem auto;
+  padding: 2.5rem 2rem;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  border-radius: 15px;
+  background: #f9fbfe;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.login-container h2 {
+  margin-bottom: 2rem;
+  color: #22314D;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.login-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1.3rem;
+}
+
+.form-row label {
+  margin-bottom: 0.5em;
+  color: #444d5e;
+  font-size: 1.05em;
+  font-weight: 500;
+  letter-spacing: .5px;
+}
+
+.form-row input[type="text"],
+.form-row input[type="password"] {
+  padding: 0.7em 1em;
+  border-radius: 8px;
+  border: 1px solid #c2c8d6;
+  font-size: 1em;
+  background: #f6faff;
+  transition: border-color .2s;
+}
+
+.form-row input:focus {
+  border-color: #00509e;
+  outline: none;
+}
+
+.login-btn {
+  margin-top: 0.5em;
+  background: #00509e;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.08em;
+  padding: 0.7em 0;
+  font-weight: 600;
+  letter-spacing: 1px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  transition: background .2s;
+}
+.login-btn:hover {
+  background: #003f7a;
+}
+
+.login-link {
+  text-align: center;
+  margin-top: 1.2em;
+  font-size: 1em;
+}
+
+.login-link a {
+  color: #00509e;
+  text-decoration: underline;
+}
+
+</style>
+{% endblock %}

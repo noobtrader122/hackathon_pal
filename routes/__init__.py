@@ -12,6 +12,7 @@ from .submission_routes import submission_bp
 from .leaderboard_routes import leaderboard_bp
 from .admin_routes import admin_bp
 from .admin_hackathon import admin_hackathon_bp
+from .user_routes import user_bp
 
 
 __all__ = [
@@ -19,12 +20,16 @@ __all__ = [
     'submission_bp', 
     'leaderboard_bp',
     'admin_bp',
-    'admin_hackathon_bp'
+    'admin_hackathon_bp',
+    'user_bp'
 ]
 
 # Route configuration
 ROUTE_PREFIXES = {
     'challenges': '/challenges',
     'submissions': '/submit', 
-    'leaderboard': '/leaderboard'
+    'leaderboard': '/leaderboard',
+    'admin': '/admin',
+    'admin_hackathon': '/admin/hackathon',
+    'user': '/user'
 }

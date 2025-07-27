@@ -20,6 +20,7 @@
   <!-- LEFT COLUMN: Challenge Content -->
   <div class="hr-task-panel">
     <div class="hr-task-content">
+      {% if challenge %}
       <h1 class="challenge-title">{{ challenge.title }}</h1>
       <div class="challenge-meta" style="margin-bottom:1em;">
         <span class="difficulty difficulty-{{ challenge.difficulty }}">{{ challenge.difficulty|capitalize }}</span>
@@ -49,6 +50,9 @@
              class="btn btn-secondary">Next &raquo;</a>
         {% endif %}
       </div>
+      {% else %}
+
+      {% endif %}
     </div>
   </div>
 
@@ -56,22 +60,21 @@
   <div class="hr-code-panel">
     <form id="submission-form"
       method="POST"
+      {% if challenge %}
       action="{{ url_for('submission_bp.handle_submission', cid=challenge.id) }}"
+      {% else %}
+      action="#"
+      {% endif %}
       autocomplete="off"
       class="submission-panel">
 
-      <!-- Challenge Timer -->
-      <div id="challenge-timer-panel" style="margin-bottom:1em;text-align:right;">
-        <span id="challenge-timer" style="font-size:1.1em; color:#198754; font-weight:500;">
-          ⏰ <span id="timer-mins"></span>:<span id="timer-secs"></span>
+      <!-- Hackathon Timer (global) -->
+      <div id="hackathon-timer-panel" style="margin-bottom:1em; text-align: right;">
+        <span id="hackathon-timer" style="font-size:1.1em; color:#198754; font-weight: 500;">
+          🏁 Time Left: <span id="hackathon-timer-val">--:--:--</span>
         </span>
       </div>
 
-      <div class="form-group">
-        <label for="email">Your Email <span class="help">(required)</span></label>
-        <input id="email" name="email" type="email" required placeholder="your@email.com">
-        <div class="validation-message" id="email-validation"></div>
-      </div>
       <div class="editor-section">
         <div class="editor-header">
           <label for="sql-editor"><strong>Your SQL Solution</strong></label>
@@ -108,10 +111,9 @@ SELECT * FROM employees WHERE ...;"></textarea>
       {% endwith %}
     </form>
   </div>
-
 </div>
+
 <style>
-/* --- Layout --- */
 .hr-page-frame {
   display: flex;
   height: calc(100vh - 4.8em);
@@ -152,7 +154,6 @@ SELECT * FROM employees WHERE ...;"></textarea>
   margin-left: 7px;
 }
 
-/* Main panels */
 .hr-task-panel, .hr-code-panel {
   width: 50%; min-width: 330px;
   display: flex; flex-direction: column;
@@ -172,7 +173,6 @@ SELECT * FROM employees WHERE ...;"></textarea>
   padding: 2em 2em 1.3em 1.3em;
   overflow-y: auto;
 }
-
 .test-cases-preview {
   background: #f9fafb;
   border-radius: 6px;
@@ -180,7 +180,6 @@ SELECT * FROM employees WHERE ...;"></textarea>
   margin: 1.3em 0 0.7em 0;
 }
 .challenge-nav-btns { margin: 2.3em 0 1.1em 0; }
-
 @media (max-width: 1200px) {
   .hr-page-frame { flex-direction: column; height: unset; }
   .challenge-nav-sidebar {
@@ -194,8 +193,6 @@ SELECT * FROM employees WHERE ...;"></textarea>
   .hr-task-content, .hr-code-panel { padding: 1.1em 0.5em; }
   .sql-editor-container textarea { height: 180px; min-height: 100px; max-height: 40vh;}
 }
-
-/* Editor textarea styles */
 .hr-code-panel .sql-editor-container textarea,
 .sql-editor-container textarea {
   box-sizing: border-box; width: 100%;
@@ -210,21 +207,16 @@ SELECT * FROM employees WHERE ...;"></textarea>
 @media (max-width: 900px) {
   .sql-editor-container textarea { width: 98% !important; }
 }
-/* Misc */
 .unselectable {
   -webkit-user-select: none; -moz-user-select: none;
   -ms-user-select: none; user-select: none;
 }
-#challenge-timer-panel {
+#hackathon-timer-panel {
   font-family: "Segoe UI", "Arial", sans-serif; letter-spacing: 1px;
 }
-#challenge-timer {
+#hackathon-timer {
   padding: .12em .5em; border-radius: 5px;
   background: #e6fbe6; color: #198754;
-}
-#challenge-timer-panel.over {
-  color: #dc3545 !important;
-  background: #f8d7da;
 }
 </style>
 {% endblock %}
@@ -233,32 +225,10 @@ SELECT * FROM employees WHERE ...;"></textarea>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   const form = document.getElementById('submission-form');
-  const emailInput = document.getElementById('email');
   const sqlInput = document.getElementById('sql-editor');
-  const emailValidation = document.getElementById('email-validation');
   const sqlValidation = document.getElementById('sql-validation');
   const submitBtn = document.getElementById('submit-btn');
-  // Email validation
-  emailInput.addEventListener('blur', validateEmail);
-  emailInput.addEventListener('input', clearEmailError);
-  function validateEmail() {
-    const email = emailInput.value.trim();
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email) {
-      emailValidation.innerHTML = 'Email is required';
-      emailValidation.className = 'validation-message error';
-      return false;
-    } else if (!emailRegex.test(email)) {
-      emailValidation.innerHTML = 'Enter a valid email address';
-      emailValidation.className = 'validation-message error';
-      return false;
-    } else {
-      emailValidation.innerHTML = '';
-      emailValidation.className = 'validation-message';
-      return true;
-    }
-  }
-  function clearEmailError() { emailValidation.innerHTML = ""; }
+ 
   // SQL basic validation
   sqlInput.addEventListener('input', function() {
     const sql = this.value.trim();
@@ -288,7 +258,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   // Form submission loading feedback
   form.addEventListener('submit', function(e) {
-    if (!validateEmail() || sqlValidation.className.includes('error')) {
+    if (sqlValidation.className.includes('error')) {
       e.preventDefault();
       return false;
     }
@@ -298,34 +268,42 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  {% if time_limit_sec %}
-    let timer = {{ time_limit_sec }};
-    let minsSpan = document.getElementById('timer-mins');
-    let secsSpan = document.getElementById('timer-secs');
-    let form = document.getElementById('submission-form');
-    let timerPanel = document.getElementById('challenge-timer-panel');
-    function pad(n) { return n < 10 ? '0' + n : n; }
-    function updateTimer() {
-      let mins = Math.floor(timer / 60);
-      let secs = timer % 60;
-      minsSpan.textContent = pad(mins);
-      secsSpan.textContent = pad(secs);
-      if (timer === 0) {
-        clearInterval(intvl);
-        if(form){
-          form.querySelectorAll("input, textarea, button").forEach(e => e.disabled = true);
-          let notice = document.createElement('div');
-          notice.innerHTML = "⏳ Time's up — you can no longer submit!";
-          notice.setAttribute("style", "margin-top:1em;color:#dc3545;font-weight:600;");
-          form.appendChild(notice);
-        }
-        timerPanel.setAttribute("style", "color:#dc3545;font-weight:600;");
+document.addEventListener('DOMContentLoaded', function () {
+  // HACKATHON GLOBAL TIMER
+  const timerEl = document.getElementById('hackathon-timer-val');
+  {% if hackathon_start_iso and hackathon_end_iso %}
+    const hStart = new Date("{{ hackathon_start_iso }}");
+    const hEnd = new Date("{{ hackathon_end_iso }}");
+    function updateHackathonTimer() {
+      const now = new Date();
+      const form = document.getElementById('submission-form');
+      if (now < hStart) {
+        timerEl.innerText = "Not started";
+        timerEl.style.color = "#757575";
+        if (form) form.querySelectorAll("input, textarea, button").forEach(e => e.disabled = true);
+        return;
       }
-      timer -= 1;
+      let diff = Math.floor((hEnd - now) / 1000); // seconds left
+      if (diff <= 0) {
+        timerEl.innerText = "Ended";
+        timerEl.style.color = "#dc3545";
+        if (form) form.querySelectorAll("input, textarea, button").forEach(e => e.disabled = true);
+        return;
+      }
+      let hours = Math.floor(diff / 3600);
+      let mins = Math.floor((diff % 3600) / 60);
+      let secs = diff % 60;
+      timerEl.innerText = [
+        hours.toString().padStart(2,'0'),
+        mins.toString().padStart(2,'0'),
+        secs.toString().padStart(2,'0')
+      ].join(":");
     }
-    updateTimer();
-    let intvl = setInterval(updateTimer, 1000);
+    updateHackathonTimer();
+    setInterval(updateHackathonTimer, 1000);
+  {% else %}
+    timerEl.innerText = "No hackathon timing info.";
+    timerEl.style.color = "#888";
   {% endif %}
 });
 </script>
