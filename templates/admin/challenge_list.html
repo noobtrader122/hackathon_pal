@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container" style="max-width:900px; margin:2em auto;">
+  <h2>All Challenges</h2>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Title</th>
+        <th>Difficulty</th>
+        <th>Points</th>
+        <th>Category</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in challenges %}
+      <tr>
+        <td>{{ c.id }}</td>
+        <td>{{ c.title }}</td>
+        <td>{{ c.difficulty }}</td>
+        <td>{{ c.points }}</td>
+        <td>{{ c.category or '-' }}</td>
+        <td>
+          <a href="{{ url_for('challenge_bp.edit_challenge', cid=c.id) }}" class="btn btn-sm btn-primary">Edit</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

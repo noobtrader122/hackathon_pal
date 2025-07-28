@@ -4,10 +4,11 @@
 ----------------------------------------------------------------------------
 """
 
-from flask import Blueprint, render_template, abort, request, session
+from flask import Blueprint, render_template, abort, request, session, redirect, url_for, flash
 import json
 from models.sqlalchemy_models import Challenge, Hackathon
 from datetime import datetime, timezone
+from factory import db
 from typing import Optional
 
 challenge_bp = Blueprint("challenge_bp", __name__)
@@ -15,7 +16,7 @@ challenge_bp = Blueprint("challenge_bp", __name__)
 
 @challenge_bp.route("/", defaults={"hackathon_id": None})
 @challenge_bp.route("/hackathon/<int:hackathon_id>")
-def list_challenges(hackathon_id: Optional[int]):
+def list_challenges_hackathon(hackathon_id: Optional[int]):
     """
     List challenges paginated.
     Optionally filter by hackathon_id using many-to-many relation.
@@ -98,4 +99,67 @@ def challenge_page(hackathon_id: int, cid: int):
         hackathon_id=hackathon_id,
         last_submission_output=last_submission_output
     )
+
+@challenge_bp.route('/edit/<int:cid>', methods=['GET', 'POST'])
+def edit_challenge(cid):
+    user_id = session.get('user_id')
+    if not session.get('is_admin'):
+        flash('You must be logged in to edit a challenge.', 'error')
+        return redirect(url_for('admin_bp.login'))
+    
+    challenge = Challenge.query.get_or_404(cid)
+    if request.method == 'POST':
+        try:
+            # Get and validate form data
+            title = request.form.get('title', '').strip()
+            description = request.form.get('description', '').strip()
+            difficulty = request.form.get('difficulty', '').strip().lower()
+            category = request.form.get('category', '').strip()
+            points = request.form.get('points', type=int)
+            max_rows = request.form.get('max_rows', type=int)
+
+            # Validate required fields
+            errors = []
+            if not title:
+                errors.append("Title is required.")
+            if not description:
+                errors.append("Description is required.")
+            if not difficulty:
+                errors.append("Difficulty is required.")
+            if not points:
+                errors.append("Points value is required.")
+            if max_rows is None:
+                # Optionally allow max_rows to be optional, otherwise:
+                errors.append("Max Rows is required.")
+
+            if errors:
+                for err in errors:
+                    flash(err, 'error')
+                # Repopulate form with entered data on error
+                return render_template('admin/edit_challenge.html', challenge=challenge)
+
+            # Update challenge object
+            challenge.title = title
+            challenge.description = description
+            challenge.difficulty = difficulty
+            challenge.category = category
+            challenge.points = points
+            challenge.max_rows = max_rows
+
+            db.session.commit()
+            flash('Challenge updated successfully!', 'success')
+            # Redirect to challenge list, or stay on edit page (adjust as needed)
+            return redirect(url_for('challenge_bp.edit_challenge', cid=cid))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating challenge: {e}', 'error')
+            return render_template('admin/edit_challenge.html', challenge=challenge)
+
+    # GET: Render the form pre-filled with challenge data
+    return render_template('admin/edit_challenge.html', challenge=challenge)
+
+@challenge_bp.route("/list_challenges")
+def list_challenges():
+    challenges = Challenge.query.order_by(Challenge.id).all()
+    return render_template("/admin/challenge_list.html", challenges=challenges)
 

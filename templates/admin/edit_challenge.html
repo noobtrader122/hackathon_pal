@@ -1,0 +1,95 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="container" style="max-width:600px; margin:2rem auto;">
+  <h2 style="margin-bottom:1.5rem; text-align:center;">Edit SQL Challenge</h2>
+
+  {# SHOW FLASH MESSAGES #}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-messages">
+        {% for category, message in messages %}
+          <div class="flash-message flash-{{ category }}" role="alert">
+            <span>{{ message }}</span>
+            <button class="flash-close" onclick="this.parentElement.remove()" aria-label="Close">&times;</button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <form method="post" class="form-group" style="background:#fafbfc; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.03); padding:2rem;">
+    <div class="form-group">
+      <label for="title">Title</label>
+      <input id="title" name="title" required placeholder="e.g. Find Sales Employees" value="{{ challenge.title }}">
+    </div>
+
+    <div class="form-group">
+      <label for="description">Description</label>
+      <textarea id="description" name="description" required rows="4" placeholder="Describe the challenge for participants...">{{ challenge.description }}</textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="difficulty">Difficulty</label>
+      <select id="difficulty" name="difficulty" required>
+        <option value="easy" {% if challenge.difficulty == "easy" %}selected{% endif %}>easy</option>
+        <option value="medium" {% if challenge.difficulty == "medium" %}selected{% endif %}>medium</option>
+        <option value="hard" {% if challenge.difficulty == "hard" %}selected{% endif %}>hard</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="category">Category <span class="help">(optional)</span></label>
+      <input id="category" name="category" placeholder="e.g. filtering, joins, aggregation" value="{{ challenge.category or '' }}">
+    </div>
+
+    <div class="form-group">
+      <label for="points">Points</label>
+      <input id="points" type="number" name="points" min="1" required value="{{ challenge.points }}">
+    </div>
+
+    <div class="form-group">
+      <label for="max_rows">Max Rows</label>
+      <input id="points" type="number" name="max_rows" min="1" required value="{{ challenge.max_rows }}">
+    </div>
+
+    <hr style="margin: 2rem 0;">
+
+    <h3 style="margin-bottom:1rem; font-size:1.3em;">Test Case</h3>
+
+    {% set tc = challenge.test_cases[0] if challenge.test_cases else None %}
+    <div class="form-group">
+      <label for="tc_schema">Test Schema (DDL)</label>
+      <textarea id="tc_schema" name="tc_schema" required rows="2" placeholder="CREATE TABLE employees (id INT, name TEXT, dept TEXT);">{{ tc.test_schema if tc else '' }}</textarea>
+    </div>
+    <div class="form-group">
+      <label for="tc_data">Test Data (DML)</label>
+      <textarea id="tc_data" name="tc_data" required rows="2" placeholder="INSERT INTO employees VALUES (1, 'Alice', 'Sales'), (2, 'Bob', 'Engineering');">{{ tc.test_data if tc else '' }}</textarea>
+    </div>
+    <div class="form-group">
+      <label for="tc_expected_result">Expected Result (JSON, e.g. [["Alice"]])</label>
+      <textarea id="tc_expected_result" name="tc_expected_result" required rows="2" placeholder='[["Alice"], ["Charlie"]]'>{{ tc.expected_result if tc else '' }}</textarea>
+    </div>
+
+    <div style="text-align: center;">
+      <button type="submit" class="btn btn-primary" style="width:60%;">Save Changes</button>
+      <a href="{{ url_for('challenge_bp.list_challenges') }}" class="btn btn-link" style="margin-top:1rem;">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<style>
+.flash-messages { margin-bottom:1.4em; }
+.flash-message { background:#f8e9e9; color:#b23535; border-radius:6px; padding:.7em 1.3em; margin-bottom: .2em; position:relative;}
+.flash-message.success {background:#e8f7f2; color: #20715f;}
+.flash-message .flash-close { float:right; border:none; background:transparent; font-size:1.4em; color:#afafaf; cursor:pointer;}
+.form-group { margin-bottom: 1.2em; }
+.form-group label { font-weight: 600; margin-bottom: .3em; display: block;}
+input, textarea, select { width:100%; padding:.8em; border-radius:5px; border:1.5px solid #dbdbdb; outline:0;}
+textarea { font-family:monospace, monospace; }
+.btn-primary { background: #237bea; color:#fff; border:none; border-radius:5px; padding:.7em 1.2em; font-size:1em; font-weight:600; }
+.btn-primary:hover { background: #005dc2; }
+.btn-link { color: #666; background: none; text-decoration: underline; }
+.help { font-weight: normal; color: #7f8c97; font-size: .97em;}
+</style>
+{% endblock %}
