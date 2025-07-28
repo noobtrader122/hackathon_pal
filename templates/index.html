@@ -34,7 +34,7 @@
                 </span>
               {% endif %}
             </div>
-            <a href="{{ url_for('challenge_bp.list_challenges', hackathon_id=h.id) }}" 
+            <a href="{{ url_for('challenge_bp.list_challenges_hackathon', hackathon_id=h.id) }}" 
                class="hackathon-view-btn" role="button" aria-label="View challenges for {{ h.name }}">
               View Challenges
             </a>
