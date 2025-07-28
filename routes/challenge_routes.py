@@ -66,6 +66,7 @@ def challenge_page(hackathon_id: int, cid: int):
 
     last_output_json = session.pop("last_submission_output", None)
     last_submission_output = json.loads(last_output_json) if last_output_json else None
+    sql_query = session.get("sql_query")
 
     if challenge not in hackathon.challenges:
         abort(404, description="Challenge not part of this hackathon.")
@@ -97,12 +98,12 @@ def challenge_page(hackathon_id: int, cid: int):
         hackathon_end_iso=hackathon_end_iso,
         now_iso=now_utc.isoformat(),
         hackathon_id=hackathon_id,
-        last_submission_output=last_submission_output
+        last_submission_output=last_submission_output,
+        sql_query=sql_query
     )
 
 @challenge_bp.route('/edit/<int:cid>', methods=['GET', 'POST'])
 def edit_challenge(cid):
-    user_id = session.get('user_id')
     if not session.get('is_admin'):
         flash('You must be logged in to edit a challenge.', 'error')
         return redirect(url_for('admin_bp.login'))

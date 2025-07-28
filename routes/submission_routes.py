@@ -61,6 +61,7 @@ def handle_submission(cid):
             return redirect(url_for("admin_hackathon.list_hackathons"))
         return redirect(url_for("challenge_bp.challenge_page", hackathon_id=hackathon_id, cid=cid))
 
+    flask_session['sql_query'] = sql_query
     try:
         # Evaluate submission
         start = time.perf_counter()
