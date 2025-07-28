@@ -43,12 +43,12 @@ def handle_submission(cid):
     user_id = flask_session.get("user_id")
     if not user_id:
         flash("You must be logged in to submit.", "error")
-        return redirect(url_for("auth_bp.login"))
+        return redirect(url_for("user_bp.login"))
 
     user = User.query.get(user_id)
     if not user:
         flash("User not found.", "error")
-        return redirect(url_for("auth_bp.login"))
+        return redirect(url_for("user_bp.login"))
 
     email = user.email
     hackathon_id = request.form.get("hackathon_id", type=int)

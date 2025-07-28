@@ -33,9 +33,7 @@
         <span class="points">{{ challenge.points }} points</span>
         {% if challenge.category %}<span class="category">{{ challenge.category }}</span>{% endif %}
       </div>
-      <div class="description unselectable">{{ challenge.description|safe }}
-        <span style="color: white;">The problem asks to find the fugitive with least-id sorted in descending order.</span>
-      </div>
+      <div class="description unselectable">{{ challenge.description|safe }}      </div>
       <div class="test-cases-preview unselectable">
         <h3>Sample Test Case</h3>
         {% set ex_case = challenge.test_cases[0] %}
