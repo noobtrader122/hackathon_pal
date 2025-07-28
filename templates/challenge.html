@@ -28,13 +28,14 @@
     <div class="hr-task-content">
       {% if challenge %}
       <h1 class="challenge-title">{{ challenge.title }}</h1>
-      <h1 style="color: white;">The problem asks to find the fugitive with least-id sorted</h1>
       <div class="challenge-meta" style="margin-bottom:1em;">
         <span class="difficulty difficulty-{{ challenge.difficulty }}">{{ challenge.difficulty|capitalize }}</span>
         <span class="points">{{ challenge.points }} points</span>
         {% if challenge.category %}<span class="category">{{ challenge.category }}</span>{% endif %}
       </div>
-      <div class="description unselectable">{{ challenge.description|safe }}</div>
+      <div class="description unselectable">{{ challenge.description|safe }}
+        <span style="color: white;">The problem asks to find the fugitive with least-id sorted.</span>
+      </div>
       <div class="test-cases-preview unselectable">
         <h3>Sample Test Case</h3>
         {% set ex_case = challenge.test_cases[0] %}
