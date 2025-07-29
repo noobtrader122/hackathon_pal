@@ -81,7 +81,7 @@ def description_to_image(description: str, sample_table: str, image_path: str):
         font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
 
     try:
-        font = ImageFont.truetype(font_path, 16)
+        font = ImageFont.truetype(font_path, 20)
     except OSError:
         font = ImageFont.load_default()
 
