@@ -1,18 +1,77 @@
 """
 ----------------------------------------------------------------------------
  Author : Rayyan Mirza
+ Modified by AI assistant for clarity, DRY, and image generation
 ----------------------------------------------------------------------------
 """
 
 from flask import Blueprint, render_template, abort, request, session, redirect, url_for, flash
-import json
-from models.sqlalchemy_models import Challenge, Hackathon
+from models.sqlalchemy_models import Challenge, Hackathon, TestCase
 from datetime import datetime, timezone
 from factory import db
 from typing import Optional
+import os
+import json
+
+# Image generation utilities
+from utils.image_gen import description_to_image, generate_table_snippet_from_testcase
 
 challenge_bp = Blueprint("challenge_bp", __name__)
 
+def validate_challenge_form(form):
+    errors = []
+    # Required fields validation
+    title = form.get('title', '').strip()
+    description = form.get('description', '').strip()
+    difficulty = form.get('difficulty', '').strip().lower()
+    category = form.get('category', '').strip()
+    points = form.get('points', type=int)
+    max_rows = form.get('max_rows', type=int)
+
+    # Test case related fields
+    tc_schema = form.get('tc_schema', '').strip()
+    tc_data = form.get('tc_data', '').strip()
+    tc_result = form.get('tc_expected_result', '').strip()
+
+    # Parse expected result
+    expected_result = None
+    if tc_result:
+        try:
+            expected_result = json.loads(tc_result)
+            if not isinstance(expected_result, list):
+                raise ValueError
+        except Exception:
+            errors.append('Expected result must be a valid JSON list of lists (e.g. [["Alice"], ["Bob"]])')
+
+    # Field presence checks
+    if not title:
+        errors.append("Title is required.")
+    if not description:
+        errors.append("Description is required.")
+    if not difficulty:
+        errors.append("Difficulty is required.")
+    if not points:
+        errors.append("Points value is required.")
+    if max_rows is None:
+        errors.append("Max Rows is required.")
+    if not tc_schema:
+        errors.append("Test schema is required.")
+    if not tc_data:
+        errors.append("Test data is required.")
+    if not tc_result:
+        errors.append("Expected result is required.")
+
+    return errors, {
+        "title": title,
+        "description": description,
+        "difficulty": difficulty,
+        "category": category,
+        "points": points,
+        "max_rows": max_rows,
+        "tc_schema": tc_schema,
+        "tc_data": tc_data,
+        "expected_result": expected_result,
+    }
 
 @challenge_bp.route("/", defaults={"hackathon_id": None})
 @challenge_bp.route("/hackathon/<int:hackathon_id>")
@@ -21,10 +80,6 @@ def list_challenges_hackathon(hackathon_id: Optional[int]):
     List challenges paginated.
     Optionally filter by hackathon_id using many-to-many relation.
     Shows first challenge as default detail.
-
-    URL examples:
-    - /                      -> all challenges (paginated)
-    - /hackathon/123         -> challenges for hackathon 123 (paginated)
     """
     page = request.args.get("page", 1, type=int)
     per_page = 20
@@ -44,7 +99,6 @@ def list_challenges_hackathon(hackathon_id: Optional[int]):
         )
         challenges = pagination.items
 
-    # Show first challenge as detail or None if no challenges
     first_challenge = challenges[0] if challenges else None
     is_first_challenge = first_challenge is not None
 
@@ -57,7 +111,6 @@ def list_challenges_hackathon(hackathon_id: Optional[int]):
         first_challenge=first_challenge,
         is_first_challenge=is_first_challenge,
     )
-
 
 @challenge_bp.route("/hackathon/<int:hackathon_id>/challenge/<int:cid>")
 def challenge_page(hackathon_id: int, cid: int):
@@ -107,60 +160,54 @@ def edit_challenge(cid):
     if not session.get('is_admin'):
         flash('You must be logged in to edit a challenge.', 'error')
         return redirect(url_for('admin_bp.login'))
-    
+
     challenge = Challenge.query.get_or_404(cid)
+    test_case = TestCase.query.filter_by(challenge_id=cid).order_by(TestCase.test_id.asc()).first()
+
     if request.method == 'POST':
-        try:
-            # Get and validate form data
-            title = request.form.get('title', '').strip()
-            description = request.form.get('description', '').strip()
-            difficulty = request.form.get('difficulty', '').strip().lower()
-            category = request.form.get('category', '').strip()
-            points = request.form.get('points', type=int)
-            max_rows = request.form.get('max_rows', type=int)
+        errors, form = validate_challenge_form(request.form)
 
-            # Validate required fields
-            errors = []
-            if not title:
-                errors.append("Title is required.")
-            if not description:
-                errors.append("Description is required.")
-            if not difficulty:
-                errors.append("Difficulty is required.")
-            if not points:
-                errors.append("Points value is required.")
-            if max_rows is None:
-                # Optionally allow max_rows to be optional, otherwise:
-                errors.append("Max Rows is required.")
+        if errors:
+            for err in errors:
+                flash(err, 'error')
+            # Repopulate form with entered data on error
+            return render_template('admin/edit_challenge.html', challenge=challenge, test_case=test_case)
 
-            if errors:
-                for err in errors:
-                    flash(err, 'error')
-                # Repopulate form with entered data on error
-                return render_template('admin/edit_challenge.html', challenge=challenge)
+        # Update challenge
+        challenge.title = form["title"]
+        challenge.description = form["description"]
+        challenge.difficulty = form["difficulty"]
+        challenge.category = form["category"]
+        challenge.points = form["points"]
+        challenge.max_rows = form["max_rows"]
 
-            # Update challenge object
-            challenge.title = title
-            challenge.description = description
-            challenge.difficulty = difficulty
-            challenge.category = category
-            challenge.points = points
-            challenge.max_rows = max_rows
+        # Update test case if present
+        if test_case:
+            test_case.test_schema = form["tc_schema"]
+            test_case.test_data = form["tc_data"]
+            test_case.expected_result = form["expected_result"]
 
-            db.session.commit()
-            flash('Challenge updated successfully!', 'success')
-            # Redirect to challenge list, or stay on edit page (adjust as needed)
-            return redirect(url_for('challenge_bp.edit_challenge', cid=cid))
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Error updating challenge: {e}', 'error')
-            return render_template('admin/edit_challenge.html', challenge=challenge)
+        db.session.commit()
 
-    # GET: Render the form pre-filled with challenge data
-    return render_template('admin/edit_challenge.html', challenge=challenge)
+        # Generate image with description and table sample
+        static_dir = os.path.join("static", "challenge_images")
+        os.makedirs(static_dir, exist_ok=True)
+        image_filename = f"challenge_{challenge.id}.png"
+        abs_image_path = os.path.abspath(os.path.join(static_dir, image_filename))
+
+        sample_table = generate_table_snippet_from_testcase(test_case) if test_case else ""
+        description_to_image(challenge.description, sample_table, abs_image_path)
+
+        challenge.description_image_path = "/" + os.path.join(static_dir, image_filename).replace("\\", "/")
+        db.session.commit()
+
+        flash('Challenge updated successfully!', 'success')
+        return redirect(url_for('challenge_bp.edit_challenge', cid=cid))
+
+    # GET: Render the form pre-filled with challenge data and test_case
+    return render_template('admin/edit_challenge.html', challenge=challenge, test_case=test_case)
 
 @challenge_bp.route("/list_challenges")
 def list_challenges():
     challenges = Challenge.query.order_by(Challenge.id).all()
     return render_template("/admin/challenge_list.html", challenges=challenges)
-

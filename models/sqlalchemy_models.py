@@ -77,6 +77,7 @@ class Challenge(db.Model, TimestampMixin):
     category = db.Column(db.String(80), nullable=True)
     points = db.Column(db.Integer, nullable=False, default=10)
     max_rows = db.Column(db.Integer, nullable=False, default=1000)
+    description_image_path = db.Column(db.String(255), nullable=True)
 
     # Remove single hackathon_id FK since replaced by many-to-many relationship
     # hackathon_id = db.Column(db.Integer, db.ForeignKey('hackathon.id'))

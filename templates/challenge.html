@@ -33,19 +33,18 @@
         <span class="points">{{ challenge.points }} points</span>
         {% if challenge.category %}<span class="category">{{ challenge.category }}</span>{% endif %}
       </div>
-      <div class="description unselectable">{{ challenge.description|safe }}      </div>
-      <div class="test-cases-preview unselectable">
-        <h3>Sample Test Case</h3>
-        {% set ex_case = challenge.test_cases[0] %}
-        <div class="example-case">
-          <strong>Schema:</strong>
-          <pre><code>{{ ex_case.test_schema }}</code></pre>
-          <strong>Data:</strong>
-          <pre><code>{{ ex_case.test_data }}</code></pre>
-          <strong>Expected Output:</strong>
-          <pre>{{ ex_case.expected_result | pprint }}</pre>
+
+      <!-- Show description image if available -->
+      {% if challenge.description_image_path %}
+        <div style="text-align:center; margin-bottom: 1.5em;">
+          <img src="{{ challenge.description_image_path }}" alt="Problem Description Image" style="max-width: 100%; border: 1px solid #ddd; border-radius: 6px;">
         </div>
-      </div>
+      {% else %}
+        <div class="description unselectable">{{ challenge.description|safe }}</div>
+      {% endif %}
+
+      <!-- Sample Test Case Preview -->
+
       <div class="challenge-nav-btns">
         <!-- Previous button -->
         {% if prev_challenge %}
@@ -55,9 +54,9 @@
         {% if next_challenge %}
           <a href="{{ url_for('challenge_bp.challenge_page', hackathon_id=hackathon_id, cid=next_challenge.id) }}" class="btn btn-secondary">Next &raquo;</a>
         {% endif %}
-              </div>
+      </div>
       {% else %}
-
+        <p>No challenge selected or available.</p>
       {% endif %}
     </div>
   </div>
@@ -96,9 +95,7 @@
             required
             style="width:100%; height:48vh; min-height:180px; max-height:60vh; resize:vertical;"
             placeholder="-- Write your SQL query here...
-          SELECT * FROM employees WHERE ...;">{% if sql_query %}{{ sql_query }}{% endif %}</textarea>
-
-
+SELECT * FROM employees WHERE ...;">{% if sql_query %}{{ sql_query }}{% endif %}</textarea>
         </div>
         <div class="validation-message" id="sql-validation"></div>
       </div>

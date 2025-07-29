@@ -1,7 +1,11 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app
 from models.sqlalchemy_models import Challenge, TestCase, User, db
 from utils.db_utils import hash_password, verify_password
+from utils.image_gen import description_to_image, generate_table_snippet_from_testcase
 from datetime import datetime
+import os
+import json
+
 
 admin_bp = Blueprint("admin_bp", __name__, url_prefix="/admin")
 
@@ -70,57 +74,100 @@ def admin_dashboard():
 @admin_required
 def new_challenge():
     if request.method == "POST":
-        title = request.form['title'].strip()
-        description = request.form['description'].strip()
-        difficulty = request.form['difficulty']
+        # Get and validate form fields
+        errors = []
+        title = request.form.get('title', '').strip()
+        description = request.form.get('description', '').strip()
+        difficulty = request.form.get('difficulty', '').strip()
         category = request.form.get('category', '').strip()
-        try:
-            points = int(request.form.get('points', 10))
-        except Exception:
-            flash('Points must be an integer.', 'danger')
-            return render_template("admin/new_challenge.html")
-        tc_schema = request.form['tc_schema'].strip()
-        tc_data = request.form['tc_data'].strip()
-        tc_result = request.form['tc_expected_result'].strip()
+        points_raw = request.form.get('points', '').strip()
+        tc_schema = request.form.get('tc_schema', '').strip()
+        tc_data = request.form.get('tc_data', '').strip()
+        tc_result = request.form.get('tc_expected_result', '').strip()
+        max_rows = request.form.get('max_rows', 1000)
 
-        # Parse expected result as JSON
-        import json
+        # Validation
+        if not title:
+            errors.append("Title is required.")
+        if not description:
+            errors.append("Description is required.")
+        if not difficulty:
+            errors.append("Difficulty is required.")
         try:
-            expected_result = json.loads(tc_result)
-            if not isinstance(expected_result, list):
-                raise ValueError
-        except Exception:
-            flash('Expected result must be a valid JSON list of lists (e.g. [["Alice"], ["Bob"]])', 'danger')
-            return render_template('admin/new_challenge.html')
+            points = int(points_raw) if points_raw else 10
+        except ValueError:
+            errors.append("Points must be an integer.")
+            points = 10
+        if not tc_schema:
+            errors.append("Test schema is required.")
+        if not tc_data:
+            errors.append("Test data is required.")
+        if not tc_result:
+            errors.append("Expected result is required.")
+        else:
+            try:
+                expected_result = json.loads(tc_result)
+                if not isinstance(expected_result, list):
+                    raise ValueError
+            except Exception:
+                errors.append('Expected result must be a valid JSON list of lists (e.g. [["Alice"], ["Bob"]])')
+                expected_result = None
 
-        # Insert Challenge and TestCase
+        # Early return on errors
+        if errors:
+            for err in errors:
+                flash(err, 'danger')
+            # Repopulate entered values on error
+            return render_template(
+                "admin/new_challenge.html",
+                # The following helps prefill fields if needed
+                title=title, description=description, difficulty=difficulty, category=category,
+                points=points_raw, tc_schema=tc_schema, tc_data=tc_data, tc_expected_result=tc_result, max_rows=max_rows
+            )
+
+        # Create the Challenge instance
         challenge = Challenge(
             title=title,
             description=description,
             difficulty=difficulty,
             category=category,
             points=points,
-            max_rows=1000
+            max_rows=max_rows,
         )
         db.session.add(challenge)
-        db.session.flush()  # get challenge.id
+        db.session.flush()  # Ensure challenge.id is assigned
 
+        # Create the sample TestCase
+        now_ts = int(datetime.utcnow().timestamp())  # unique test_id (could use autoinc)
         test_case = TestCase(
             challenge_id=challenge.id,
-            test_id=int(datetime.utcnow().timestamp()),  # unique id (better: use db autoinc if possible)
+            test_id=now_ts,
             test_schema=tc_schema,
             test_data=tc_data,
             expected_result=expected_result,
-            description="",
+            description="Sample test case",
             max_execution_sec=30
         )
         db.session.add(test_case)
         db.session.commit()
 
+        # Generate sample table snippet (CREATE TABLE + first 2 INSERTs)
+        sample_table = generate_table_snippet_from_testcase(test_case)
+        static_dir = os.path.join("static", "challenge_images")
+        os.makedirs(static_dir, exist_ok=True)
+        image_filename = f"challenge_{challenge.id}.png"
+        abs_image_path = os.path.abspath(os.path.join(static_dir, image_filename))
+        description_to_image(challenge.description, sample_table, abs_image_path)
+
+        challenge.description_image_path = "/" + os.path.join(static_dir, image_filename).replace("\\", "/")
+        db.session.commit()
+
         flash("Challenge added successfully!", "success")
         return redirect(url_for('admin_bp.new_challenge'))
 
+    # GET
     return render_template("admin/new_challenge.html")
+
 
 ######################################################################
 # Register User (Admin adds new user – use strong password rules)
